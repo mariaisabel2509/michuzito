@@ -17,12 +17,12 @@ class TwoFactorCodeNotification extends Notification
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject('Codigo de verificacion - Mi Chuzito')
+            ->subject('Código de verificación - Mi Chuzito')
             ->greeting('Hola, ' . $notifiable->name)
-            ->line('Tu codigo de verificacion en dos pasos es:')
+            ->line('Tu código de verificación es:')
             ->line('**' . $this->code . '**')
-            ->line('Este codigo expira en 10 minutos.')
-            ->line('Si no solicitaste este codigo, ignora este mensaje.')
+            ->line('Este código expira en 10 minutos.')
+            ->line('Si no intentaste iniciar sesión, ignora este mensaje.')
             ->salutation('El equipo de Mi Chuzito');
     }
 }

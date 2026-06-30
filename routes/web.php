@@ -6,40 +6,54 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\MenuController;
+use App\Http\Controllers\WhatsAppAuthController;
+use App\Http\Controllers\OrderController;
+use App\Http\Controllers\InventoryController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
+Route::get('/', [MenuController::class, 'index'])->name('home');
 Route::middleware('guest')->group(function () {
     Route::get('/login',     [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login',    [AuthController::class, 'login']);
     Route::get('/register',  [AuthController::class, 'showRegister'])->name('register');
     Route::post('/register', [AuthController::class, 'register']);
+    Route::get('/activate',         [AuthController::class, 'showActivation'])->name('auth.activate');
+    Route::post('/activate',        [AuthController::class, 'activate'])->name('auth.activate.verify');
+    Route::post('/activate/resend', [AuthController::class, 'resendActivation'])->name('auth.activate.resend');
     Route::get('/2fa/challenge',  [TwoFactorController::class, 'showChallenge'])->name('2fa.challenge');
-    Route::post('/2fa/verify',    [TwoFactorController::class, 'verify']);
+    Route::post('/2fa/verify',    [TwoFactorController::class, 'verify'])->name('2fa.verify');
     Route::post('/2fa/resend',    [TwoFactorController::class, 'resend'])->name('2fa.resend');
+    Route::get('/auth/whatsapp',         [WhatsAppAuthController::class, 'show'])->name('auth.whatsapp');
+    Route::post('/auth/whatsapp/send',   [WhatsAppAuthController::class, 'sendOtp'])->name('auth.whatsapp.send');
+    Route::get('/auth/whatsapp/verify',  [WhatsAppAuthController::class, 'showVerify'])->name('auth.whatsapp.verify');
+    Route::post('/auth/whatsapp/verify', [WhatsAppAuthController::class, 'verifyOtp'])->name('auth.whatsapp.verify.post');
+    Route::post('/auth/whatsapp/resend', [WhatsAppAuthController::class, 'resendOtp'])->name('auth.whatsapp.resend');
     Route::get('/forgot-password',  [ForgotPasswordController::class, 'show'])->name('password.forgot');
     Route::post('/forgot-password', [ForgotPasswordController::class, 'send'])->name('password.send');
     Route::get('/reset-password',   [ForgotPasswordController::class, 'showReset'])->name('password.reset');
     Route::post('/reset-password',  [ForgotPasswordController::class, 'reset'])->name('password.update');
 });
-
 Route::middleware(['auth'])->group(function () {
-    Route::get('/dashboard', function () {
-        return Inertia::render('Dashboard');
-    })->name('dashboard');
-
+    Route::get('/dashboard', function () { return Inertia::render('Dashboard'); })->name('dashboard');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
     Route::post('/2fa/enable', [TwoFactorController::class, 'enable'])->name('2fa.enable');
-
     Route::get('/perfil',            [ProfileController::class, 'show'])->name('profile.show');
     Route::put('/perfil',            [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/perfil/contrasena', [ProfileController::class, 'changePassword'])->name('profile.password');
-
+        Route::patch('/perfil/disponibilidad', [ProfileController::class, 'toggleAvailability'])->name('profile.toggle.availability');
     Route::get('/pagos',                       [PaymentController::class, 'show'])->name('payments.show');
     Route::post('/pagos',                      [PaymentController::class, 'store'])->name('payments.store');
     Route::get('/payments/invoice/{invoice}',  [PaymentController::class, 'invoice'])->name('payments.invoice');
     Route::get('/payments/pending/{payment}',  [PaymentController::class, 'pending'])->name('payments.pending');
-
+    Route::get('/orders',                  [OrderController::class, 'index'])->name('orders.index');
+    Route::post('/orders',                 [OrderController::class, 'store'])->name('orders.store');
+    Route::get('/orders/{order}',          [OrderController::class, 'show'])->name('orders.show');
+    Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+    Route::get('/mis-entregas',            [OrderController::class, 'repartidorOrders'])->name('orders.repartidor');
+    Route::get('/mis-pedidos-vendedor',    [OrderController::class, 'vendedorOrders'])->name('orders.vendedor');
+    Route::post('/orders/{order}/claim',   [OrderController::class, 'claimOrder'])->name('orders.claim');
     Route::middleware('role:administrador')->group(function () {
         Route::get('/admin/users',                        [UserController::class, 'index'])->name('admin.users');
         Route::post('/admin/users',                       [UserController::class, 'store']);
@@ -47,5 +61,11 @@ Route::middleware(['auth'])->group(function () {
         Route::patch('/admin/users/{user}/deactivate',    [UserController::class, 'deactivate']);
         Route::get('/admin/payments',                     [PaymentController::class, 'index'])->name('admin.payments');
         Route::patch('/admin/payments/{payment}/approve', [PaymentController::class, 'approve'])->name('payments.approve');
+        Route::get('/admin/orders',                       [OrderController::class, 'adminIndex'])->name('admin.orders');
+        Route::patch('/admin/orders/{order}/assign',      [OrderController::class, 'assignRepartidor'])->name('admin.orders.assign');
+        Route::get('/admin/inventory',                    [InventoryController::class, 'index'])->name('admin.inventory');
+        Route::post('/admin/inventory/{product}', [InventoryController::class, 'update'])->name('admin.inventory.update');
+        Route::post('/admin/inventory',                   [InventoryController::class, 'store'])->name('admin.inventory.store');
+        Route::delete('/admin/inventory/{product}',       [InventoryController::class, 'destroy'])->name('admin.inventory.destroy');
     });
 });

@@ -9,23 +9,27 @@ use Inertia\Inertia;
 
 class ProfileController extends Controller
 {
-    // RF-025: Ver perfil
     public function show(Request $request)
     {
         $user = $request->user()->load('profile');
+
+        if ($user->hasRole('repartidor')) {
+            return Inertia::render('Profile/Driver', [
+                'user' => $user,
+            ]);
+        }
 
         return Inertia::render('Profile/Show', [
             'user' => $user,
         ]);
     }
 
-    // RF-025: Editar perfil
     public function update(Request $request)
     {
         $user = $request->user();
 
         $request->validate([
-            'name'            => 'required|string|max:100',
+            'name'            => ['required', 'string', 'max:100', 'regex:/^[a-zA-ZáéíóúÁÉÍÓÚñÑ]+(\s[a-zA-ZáéíóúÁÉÍÓÚñÑ]+)*$/'],
             'phone'           => 'nullable|string|unique:users,phone,' . $user->id,
             'address'         => 'nullable|string|max:255',
             'city'            => 'nullable|string|max:100',
@@ -35,13 +39,11 @@ class ProfileController extends Controller
             'birth_date'      => 'nullable|date',
         ]);
 
-        // Actualizar datos del usuario
         $user->update([
             'name'  => $request->name,
             'phone' => $request->phone,
         ]);
 
-        // Actualizar o crear perfil
         $user->profile()->updateOrCreate(
             ['user_id' => $user->id],
             [
@@ -57,7 +59,6 @@ class ProfileController extends Controller
         return back()->with('success', 'Perfil actualizado correctamente.');
     }
 
-    // RF-027: Cambio de contrasena
     public function changePassword(Request $request)
     {
         $request->validate([
@@ -71,10 +72,28 @@ class ProfileController extends Controller
             return back()->withErrors(['current_password' => 'La contrasena actual es incorrecta.']);
         }
 
-        $user->update([
-            'password' => bcrypt($request->password),
-        ]);
+        $user->update(['password' => bcrypt($request->password)]);
 
         return back()->with('success', 'Contrasena actualizada correctamente.');
+    }
+
+    // RF-038: Repartidor cambia su disponibilidad
+    public function toggleAvailability(Request $request)
+    {
+        $user = $request->user();
+        abort_unless($user->hasRole('repartidor'), 403);
+
+        $user->update([
+            'disponible'            => !$user->disponible,
+            'disponible_updated_at' => now(),
+        ]);
+
+        activity()
+            ->causedBy($user)
+            ->performedOn($user)
+            ->withProperties(['disponible' => $user->disponible])
+            ->log('repartidor_disponibilidad_actualizada');
+
+        return back()->with('success', $user->disponible ? 'Ahora estas disponible.' : 'Ahora estas no disponible.');
     }
 }

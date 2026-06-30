@@ -1,11 +1,11 @@
 <script setup>
-import { useForm } from '@inertiajs/vue3'
+import { useForm, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
 const activeTab = ref('login')
 
 const loginForm = useForm({
-    email: '',
+    login:    '',
     password: '',
     remember: false,
 })
@@ -16,7 +16,6 @@ const registerForm = useForm({
     phone: '',
     password: '',
     password_confirmation: '',
-    role: 'cliente',
 })
 
 const showLoginPassword = ref(false)
@@ -30,7 +29,7 @@ const submitRegister = () => registerForm.post('/register')
 <template>
 <div style="min-height:100vh;display:flex;font-family:'Segoe UI',sans-serif">
 
-    <!-- Panel izquierdo naranja -->
+    <!-- Panel izquierdo -->
     <div style="width:380px;min-height:100vh;background:linear-gradient(135deg,#f97316,#ea580c);display:flex;flex-direction:column;justify-content:center;padding:3rem 2.5rem;position:relative;overflow:hidden;flex-shrink:0">
         <div style="position:absolute;top:-60px;left:-60px;width:200px;height:200px;border-radius:50%;background:rgba(255,255,255,0.08)"></div>
         <div style="position:absolute;bottom:-80px;right:-40px;width:250px;height:250px;border-radius:50%;background:rgba(255,255,255,0.06)"></div>
@@ -43,7 +42,7 @@ const submitRegister = () => registerForm.post('/register')
             </div>
             <h1 style="color:white;font-size:42px;font-weight:800;line-height:1.1;margin-bottom:1rem">Tu sabor,<br>tu<br>plataforma.</h1>
             <p style="color:rgba(255,255,255,0.85);font-size:14px;line-height:1.6;margin-bottom:2rem">Gestiona tu negocio, tus clientes y tus ventas desde un solo lugar seguro y eficiente.</p>
-            <ul style="list-style:none;padding:0;margin:0">
+            <ul style="list-style:none;padding:0;margin:0 0 2rem">
                 <li style="color:rgba(255,255,255,0.9);font-size:13px;margin-bottom:10px;display:flex;align-items:center;gap:8px">
                     <span style="width:6px;height:6px;border-radius:50%;background:white;display:inline-block;flex-shrink:0"></span>
                     Registro por correo o telefono
@@ -57,11 +56,14 @@ const submitRegister = () => registerForm.post('/register')
                     Acceso controlado por rol
                 </li>
             </ul>
+            <button @click="router.visit('/')" style="background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.4);color:white;padding:9px 18px;border-radius:8px;font-size:13px;cursor:pointer;font-weight:500">
+                Ver menu
+            </button>
         </div>
     </div>
 
     <!-- Panel derecho -->
-    <div style="flex:1;display:flex;align-items:center;justify-content:center;background:white;padding:2rem">
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;background:white;padding:2rem;overflow-y:auto">
         <div style="width:100%;max-width:480px">
 
             <!-- Tabs -->
@@ -79,17 +81,17 @@ const submitRegister = () => registerForm.post('/register')
             <!-- LOGIN -->
             <div v-if="activeTab==='login'">
                 <h2 style="font-size:24px;font-weight:700;color:#1e293b;margin-bottom:4px">Bienvenido de nuevo</h2>
-                <p style="font-size:13px;color:#94a3b8;margin-bottom:1.5rem">Accede con tu cuenta registrada</p>
+                <p style="font-size:13px;color:#94a3b8;margin-bottom:1.5rem">Accede con tu correo o numero de telefono</p>
 
-                <div v-if="loginForm.errors.email" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem">
-                    {{ loginForm.errors.email }}
+                <div v-if="loginForm.errors.login" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626;padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:1rem">
+                    {{ loginForm.errors.login }}
                 </div>
 
                 <div style="margin-bottom:1rem">
                     <label style="font-size:11px;font-weight:600;color:#64748b;letter-spacing:0.05em;text-transform:uppercase">Correo o Telefono</label>
                     <div style="position:relative;margin-top:6px">
-                        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#94a3b8" width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-                        <input v-model="loginForm.email" type="email" placeholder="correo@ejemplo.com o +57 300 000 0000"
+                        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%)" width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                        <input v-model="loginForm.login" type="text" placeholder="correo@ejemplo.com o +57 300 000 0000"
                             style="width:100%;padding:11px 12px 11px 38px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;box-sizing:border-box"
                             @focus="$event.target.style.borderColor='#f97316'"
                             @blur="$event.target.style.borderColor='#e2e8f0'"/>
@@ -106,8 +108,8 @@ const submitRegister = () => registerForm.post('/register')
                             @blur="$event.target.style.borderColor='#e2e8f0'"/>
                         <button @click="showLoginPassword=!showLoginPassword" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer">
                             <svg width="16" height="16" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24">
+                                <path v-if="!showLoginPassword" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle v-if="!showLoginPassword" cx="12" cy="12" r="3"/>
                                 <path v-if="showLoginPassword" d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line v-if="showLoginPassword" x1="1" y1="1" x2="23" y2="23"/>
-                                <path v-else d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle v-if="!showLoginPassword" cx="12" cy="12" r="3"/>
                             </svg>
                         </button>
                     </div>
@@ -124,21 +126,6 @@ const submitRegister = () => registerForm.post('/register')
                     style="width:100%;padding:13px;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer">
                     {{ loginForm.processing ? 'Ingresando...' : 'Ingresar' }}
                 </button>
-
-                <div style="display:flex;align-items:center;gap:10px;margin:1.5rem 0">
-                    <div style="flex:1;height:1px;background:#e2e8f0"></div>
-                    <span style="font-size:12px;color:#94a3b8">o continua con</span>
-                    <div style="flex:1;height:1px;background:#e2e8f0"></div>
-                </div>
-
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                    <button style="padding:11px;border:1.5px solid #e2e8f0;border-radius:8px;background:white;font-size:13px;color:#475569;cursor:pointer">
-                        Telefono
-                    </button>
-                    <button style="padding:11px;border:1.5px solid #e2e8f0;border-radius:8px;background:white;font-size:13px;color:#475569;cursor:pointer">
-                        Correo
-                    </button>
-                </div>
             </div>
 
             <!-- REGISTRO -->
@@ -157,22 +144,14 @@ const submitRegister = () => registerForm.post('/register')
                     </button>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
-                    <div>
-                        <label style="font-size:11px;font-weight:600;color:#64748b;letter-spacing:0.05em;text-transform:uppercase">Nombre</label>
-                        <input v-model="registerForm.name" placeholder="Tu nombre"
-                            style="width:100%;padding:11px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;margin-top:6px"
-                            @focus="$event.target.style.borderColor='#f97316'"
-                            @blur="$event.target.style.borderColor='#e2e8f0'"/>
-                        <span v-if="registerForm.errors.name" style="color:#dc2626;font-size:11px">{{ registerForm.errors.name }}</span>
-                    </div>
-                    <div>
-                        <label style="font-size:11px;font-weight:600;color:#64748b;letter-spacing:0.05em;text-transform:uppercase">Apellido</label>
-                        <input placeholder="Tu apellido"
-                            style="width:100%;padding:11px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;margin-top:6px"
-                            @focus="$event.target.style.borderColor='#f97316'"
-                            @blur="$event.target.style.borderColor='#e2e8f0'"/>
-                    </div>
+                <div style="margin-bottom:1rem">
+                    <label style="font-size:11px;font-weight:600;color:#64748b;letter-spacing:0.05em;text-transform:uppercase">Nombre completo</label>
+                    <input v-model="registerForm.name" placeholder="Solo letras, sin espacios ni caracteres especiales"
+                        style="width:100%;padding:11px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;margin-top:6px"
+                        @focus="$event.target.style.borderColor='#f97316'"
+                        @blur="$event.target.style.borderColor='#e2e8f0'"/>
+                    <span v-if="registerForm.errors.name" style="color:#dc2626;font-size:11px;margin-top:4px;display:block">{{ registerForm.errors.name }}</span>
+                    <span v-else style="font-size:11px;color:#94a3b8;margin-top:4px;display:block">Solo letras A-Z, sin espacios ni tildes</span>
                 </div>
 
                 <div v-if="registerMethod==='email'" style="margin-bottom:1rem">
@@ -192,7 +171,7 @@ const submitRegister = () => registerForm.post('/register')
                         @blur="$event.target.style.borderColor='#e2e8f0'"/>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.5rem">
                     <div>
                         <label style="font-size:11px;font-weight:600;color:#64748b;letter-spacing:0.05em;text-transform:uppercase">Contrasena</label>
                         <div style="position:relative;margin-top:6px">
@@ -203,7 +182,7 @@ const submitRegister = () => registerForm.post('/register')
                             <button @click="showRegisterPassword=!showRegisterPassword" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer">
                                 <svg width="15" height="15" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24">
                                     <path v-if="!showRegisterPassword" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle v-if="!showRegisterPassword" cx="12" cy="12" r="3"/>
-                                    <path v-if="showRegisterPassword" d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/><line v-if="showRegisterPassword" x1="1" y1="1" x2="23" y2="23"/>
+                                    <path v-if="showRegisterPassword" d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94"/><line v-if="showRegisterPassword" x1="1" y1="1" x2="23" y2="23"/>
                                 </svg>
                             </button>
                         </div>
@@ -215,22 +194,6 @@ const submitRegister = () => registerForm.post('/register')
                             style="width:100%;padding:11px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;margin-top:6px"
                             @focus="$event.target.style.borderColor='#f97316'"
                             @blur="$event.target.style.borderColor='#e2e8f0'"/>
-                    </div>
-                </div>
-
-                <div style="margin-bottom:1.5rem">
-                    <label style="font-size:11px;font-weight:600;color:#64748b;letter-spacing:0.05em;text-transform:uppercase">Selecciona tu rol</label>
-                    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px">
-                        <div v-for="r in ['cliente','vendedor','administrador']" :key="r"
-                            @click="registerForm.role = r"
-                            :style="`padding:14px 8px;border-radius:8px;border:1.5px solid;text-align:center;cursor:pointer;${registerForm.role===r ? 'border-color:#f97316;background:#fff7ed' : 'border-color:#e2e8f0;background:white'}`">
-                            <svg style="margin:0 auto 6px;display:block" width="20" height="20" fill="none" :stroke="registerForm.role===r ? '#f97316' : '#94a3b8'" stroke-width="2" viewBox="0 0 24 24">
-                                <path v-if="r==='cliente'" d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle v-if="r==='cliente'" cx="12" cy="7" r="4"/>
-                                <path v-if="r==='vendedor'" d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline v-if="r==='vendedor'" points="9 22 9 12 15 12 15 22"/>
-                                <circle v-if="r==='administrador'" cx="12" cy="12" r="3"/><path v-if="r==='administrador'" d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/>
-                            </svg>
-                            <div :style="`font-size:12px;font-weight:500;text-transform:capitalize;${registerForm.role===r ? 'color:#f97316' : 'color:#64748b'}`">{{ r }}</div>
-                        </div>
                     </div>
                 </div>
 

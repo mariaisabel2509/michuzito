@@ -31,6 +31,12 @@ class UserController extends Controller
 
         $user->assignRole($data['role']);
 
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($user)
+            ->withProperties(['new_role' => $data['role']])
+            ->log('user_created');
+
         return redirect()->back()->with('success', 'Usuario creado.');
     }
 
@@ -38,13 +44,32 @@ class UserController extends Controller
     {
         $user->update(['is_active' => false]);
         $user->tokens()->delete();
+
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($user)
+            ->log('user_deactivated');
+
         return back()->with('success', 'Usuario desactivado.');
     }
 
+    // RF-029: Asignar rol con auditoria (RN-029)
     public function assignRole(Request $request, User $user)
     {
         $request->validate(['role' => 'required|exists:roles,name']);
+
+        $oldRole = $user->getRoleNames()->first();
         $user->syncRoles([$request->role]);
+
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($user)
+            ->withProperties([
+                'old_role' => $oldRole,
+                'new_role' => $request->role,
+            ])
+            ->log('role_changed');
+
         return back()->with('success', 'Rol actualizado.');
     }
 }

@@ -14,20 +14,13 @@ class User extends Authenticatable
     use HasFactory, HasApiTokens, Notifiable, HasRoles, SoftDeletes;
 
     protected $fillable = [
-        'name',
-        'email',
-        'phone',
-        'password',
-        'two_factor_enabled',
-        'two_factor_code',
-        'two_factor_expires_at',
-        'is_active',
+        'name', 'email', 'phone', 'password',
+        'two_factor_enabled', 'two_factor_code', 'two_factor_expires_at',
+        'is_active', 'is_verified', 'disponible', 'disponible_updated_at',
     ];
 
     protected $hidden = [
-        'password',
-        'remember_token',
-        'two_factor_code',
+        'password', 'remember_token', 'two_factor_code',
     ];
 
     protected $casts = [
@@ -35,11 +28,39 @@ class User extends Authenticatable
         'two_factor_enabled'    => 'boolean',
         'two_factor_expires_at' => 'datetime',
         'is_active'             => 'boolean',
+        'is_verified'           => 'boolean',
+        'disponible'            => 'boolean',
+        'disponible_updated_at' => 'datetime',
     ];
 
     public function profile()
     {
         return $this->hasOne(UserProfile::class);
+    }
+
+    public function verificationCodes()
+    {
+        return $this->hasMany(VerificationCode::class);
+    }
+
+    public function payments()
+    {
+        return $this->hasMany(Payment::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function assignedOrders()
+    {
+        return $this->hasMany(Order::class, 'repartidor_id');
+    }
+
+    public function vendorOrders()
+    {
+        return $this->hasMany(Order::class, 'vendedor_id');
     }
 
     public function generateTwoFactorCode(): string
