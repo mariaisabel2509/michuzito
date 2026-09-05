@@ -2,10 +2,98 @@
 import { useForm, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
-const { products, agotados, bajos } = defineProps(['products', 'agotados', 'bajos'])
-
+const {
+    products,
+    supplies,
+    agotados,
+    bajos,
+    insumosBajos
+} = defineProps([
+    'products',
+    'supplies',
+    'agotados',
+    'bajos',
+    'insumosBajos'
+])
 const editForm   = useForm({ stock: 0, is_available: true, price: 0, image: null })
 const createForm = useForm({ name: '', description: '', price: '', category: '', stock: '', image: null })
+const supplyForm = useForm({
+    name: '',
+    category: '',
+    unit: '',
+    cost: '',
+    stock: '',
+    minimum_stock: '',
+})
+const createSupplyForm = useForm({
+    name: '',
+    category: '',
+    unit: 'Kg',
+    cost: '',
+    stock: '',
+    minimum_stock: '5',
+})
+const editingSupply = ref(null)
+const showCreateSupply = ref(false)
+const formattedCreateCost = ref('')
+const formattedEditCost = ref('')
+
+const formatThousands = (val) => {
+    if (!val && val !== 0) return ''
+    const clean = val.toString().replace(/\D/g, '')
+    if (!clean) return ''
+    return clean.replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
+
+const onCostCreateInput = (e) => {
+    const rawDigits = e.target.value.replace(/\D/g, '')
+    if (!rawDigits) {
+        createSupplyForm.cost = ''
+        formattedCreateCost.value = ''
+        return
+    }
+    const num = parseInt(rawDigits, 10)
+    createSupplyForm.cost = num
+    formattedCreateCost.value = formatThousands(num)
+}
+
+const onCostEditInput = (e) => {
+    const rawDigits = e.target.value.replace(/\D/g, '')
+    if (!rawDigits) {
+        supplyForm.cost = ''
+        formattedEditCost.value = ''
+        return
+    }
+    const num = parseInt(rawDigits, 10)
+    supplyForm.cost = num
+    formattedEditCost.value = formatThousands(num)
+}
+
+const saveSupply = (id) => {
+    supplyForm.post(`/admin/supplies/${id}`, {
+        onSuccess: () => {
+            editingSupply.value = null
+            supplyForm.reset()
+            formattedEditCost.value = ''
+        }
+    })
+}
+
+const submitCreateSupply = () => {
+    createSupplyForm.post('/admin/supplies', {
+        onSuccess: () => {
+            showCreateSupply.value = false
+            createSupplyForm.reset()
+            formattedCreateCost.value = ''
+        }
+    })
+}
+
+const cancelEditSupply = () => {
+    editingSupply.value = null
+    supplyForm.reset()
+    formattedEditCost.value = ''
+}
 const editingId   = ref(null)
 const showCreate  = ref(false)
 const createPreview = ref(null)
@@ -52,7 +140,29 @@ const submitCreate = () => {
     })
 }
 
-const formatPrice = (p) => '$' + Number(p).toLocaleString('es-CO')
+const formatPrice = (p) => {
+    const num = Math.round(Number(p) || 0)
+    return '$' + num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+}
+
+const startEditSupply = (supply) => {
+    editingSupply.value = supply.id
+    supplyForm.clearErrors()
+    supplyForm.name = supply.name
+    supplyForm.category = supply.category
+    supplyForm.unit = supply.unit
+    const costNum = Math.round(Number(supply.cost)) || 0
+    supplyForm.cost = costNum
+    formattedEditCost.value = costNum > 0 ? formatThousands(costNum) : ''
+    supplyForm.stock = Math.round(Number(supply.stock)) || 0
+    supplyForm.minimum_stock = Math.round(Number(supply.minimum_stock)) || 0
+}
+const deleteSupply = (id) => {
+    if (confirm('¿Eliminar este insumo?')) {
+        router.delete(`/admin/supplies/${id}`)
+    }
+
+}
 </script>
 
 <template>
@@ -74,7 +184,7 @@ const formatPrice = (p) => '$' + Number(p).toLocaleString('es-CO')
         </div>
     </nav>
 
-    <div style="max-width:1100px;margin:2rem auto;padding:0 1rem">
+    <div style="max-width:1100px;margin:2rem auto;padding:0 1rem"> 
 
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem">
             <div>
@@ -87,8 +197,7 @@ const formatPrice = (p) => '$' + Number(p).toLocaleString('es-CO')
             </button>
         </div>
 
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem">
-            <div style="background:white;border-radius:10px;border:1px solid #e2e8f0;padding:1rem;text-align:center">
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem">            <div style="background:white;border-radius:10px;border:1px solid #e2e8f0;padding:1rem;text-align:center">
                 <div style="font-size:28px;font-weight:800;color:#f97316">{{ products.length }}</div>
                 <div style="font-size:12px;color:#64748b">Total productos</div>
             </div>
@@ -100,6 +209,14 @@ const formatPrice = (p) => '$' + Number(p).toLocaleString('es-CO')
                 <div style="font-size:28px;font-weight:800;color:#c2410c">{{ bajos }}</div>
                 <div style="font-size:12px;color:#64748b">Stock bajo (5 o menos)</div>
             </div>
+            <div style="background:white;border-radius:10px;border:1px solid #dcfce7;padding:1rem;text-align:center">
+                <div style="font-size:28px;font-weight:800;color:#16a34a">
+                {{ insumosBajos }}
+            </div>
+
+            <div style="font-size:12px;color:#64748b">Insumos con stock bajo</div>
+
+</div>
         </div>
 
         <!-- Formulario crear producto -->
@@ -245,6 +362,265 @@ const formatPrice = (p) => '$' + Number(p).toLocaleString('es-CO')
                                     </button>
                                 </template>
                             </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- ===================== INSUMOS ===================== -->
+        <div
+            style="
+                margin-top:35px;
+                background:white;
+                border-radius:12px;
+                border:1px solid #e2e8f0;
+                overflow:hidden;
+                box-shadow:0 1px 3px rgba(0,0,0,.05);
+            ">
+
+            <!-- Encabezado -->
+            <div
+                style="
+                    padding:18px 20px;
+                    border-bottom:1px solid #e2e8f0;
+                    background:#f8fafc;
+                    display:flex;
+                    align-items:center;
+                    justify-content:space-between;
+                ">
+                <div>
+                    <h2 style="margin:0;font-size:18px;font-weight:700;color:#1e293b">
+                        Inventario de Insumos
+                    </h2>
+                    <p style="margin-top:4px;font-size:13px;color:#64748b">
+                        Organiza y controla los insumos del negocio.
+                    </p>
+                </div>
+                <button
+                    @click="showCreateSupply = !showCreateSupply"
+                    style="
+                        padding:9px 18px;
+                        background:linear-gradient(135deg,#f97316,#ea580c);
+                        color:white;
+                        border:none;
+                        border-radius:8px;
+                        font-size:13px;
+                        font-weight:600;
+                        cursor:pointer;
+                    ">
+                    {{ showCreateSupply ? '✕ Cerrar formulario' : '+ Nuevo insumo' }}
+                </button>
+            </div>
+
+            <!-- Formulario Crear Insumo -->
+            <div v-if="showCreateSupply" style="padding:1.5rem;background:#fffaf0;border-bottom:1px solid #fed7aa">
+                <h3 style="font-size:15px;font-weight:600;color:#9a3412;margin:0 0 1rem 0">Registrar nuevo insumo</h3>
+                <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:12px;margin-bottom:1rem">
+                    <div>
+                        <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase">Nombre</label>
+                        <input v-model="createSupplyForm.name" placeholder="Ej: Carne molida de res"
+                            style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;margin-top:4px" />
+                        <span v-if="createSupplyForm.errors.name" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ createSupplyForm.errors.name }}</span>
+                    </div>
+                    <div>
+                        <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase">Categoría</label>
+                        <input v-model="createSupplyForm.category" placeholder="Ej: Carnes / Verduras"
+                            style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;margin-top:4px" />
+                        <span v-if="createSupplyForm.errors.category" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ createSupplyForm.errors.category }}</span>
+                    </div>
+                    <div>
+                        <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase">Unidad</label>
+                        <input v-model="createSupplyForm.unit" placeholder="Ej: Kg, Litros, Unidades"
+                            style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;margin-top:4px" />
+                        <span v-if="createSupplyForm.errors.unit" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ createSupplyForm.errors.unit }}</span>
+                    </div>
+                    <div>
+                        <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase">Precio ($)</label>
+                        <div style="position:relative;margin-top:4px">
+                            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:13px;font-weight:600">$</span>
+                            <input 
+                                :value="formattedCreateCost"
+                                @input="onCostCreateInput"
+                                type="text"
+                                inputmode="numeric"
+                                placeholder="18.000"
+                                style="width:100%;padding:8px 10px 8px 24px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box"
+                                @focus="$event.target.style.borderColor='#f97316'"
+                                @blur="$event.target.style.borderColor='#e2e8f0'"
+                            />
+                        </div>
+                        <span v-if="createSupplyForm.errors.cost" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ createSupplyForm.errors.cost }}</span>
+                    </div>
+                    <div>
+                        <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase">Stock inicial (Entero)</label>
+                        <input v-model="createSupplyForm.stock" type="number" step="1" min="0" placeholder="0"
+                            style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;margin-top:4px" />
+                        <span v-if="createSupplyForm.errors.stock" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ createSupplyForm.errors.stock }}</span>
+                    </div>
+                    <div>
+                        <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase">Stock mínimo (Entero)</label>
+                        <input v-model="createSupplyForm.minimum_stock" type="number" step="1" min="0" placeholder="5"
+                            style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;margin-top:4px" />
+                        <span v-if="createSupplyForm.errors.minimum_stock" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ createSupplyForm.errors.minimum_stock }}</span>
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px">
+                    <button @click="submitCreateSupply" :disabled="createSupplyForm.processing"
+                        style="padding:8px 18px;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">
+                        {{ createSupplyForm.processing ? 'Guardando...' : 'Crear insumo' }}
+                    </button>
+                    <button @click="showCreateSupply=false;createSupplyForm.reset()"
+                        style="padding:8px 18px;background:#f1f5f9;color:#64748b;border:none;border-radius:8px;font-size:13px;cursor:pointer">
+                        Cancelar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabla -->
+            <table style="width:100%;border-collapse:collapse;">
+                <thead>
+                    <tr style="background:#f8fafc;">
+                        <th style="padding:14px 18px;text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;">Nombre</th>
+                        <th style="padding:14px 18px;text-align:left;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;">Categoría</th>
+                        <th style="padding:14px 18px;text-align:center;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;">Unidad</th>
+                        <th style="padding:14px 18px;text-align:center;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;">Precio</th>
+                        <th style="padding:14px 18px;text-align:center;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;">Stock</th>
+                        <th style="padding:14px 18px;text-align:center;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;">Mínimo</th>
+                        <th style="padding:14px 18px;text-align:center;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;">Estado</th>
+                        <th style="padding:14px 18px;text-align:center;font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody v-if="supplies && supplies.length > 0">
+                    <tr
+                        v-for="supply in supplies"
+                        :key="supply.id"
+                        :style="`border-top:1px solid #eef2f7;transition:.2s;${editingSupply === supply.id ? 'background:#fffbf5;' : ''}`">
+
+                        <!-- Nombre -->
+                        <td style="padding:12px 18px">
+                            <template v-if="editingSupply === supply.id">
+                                <input v-model="supplyForm.name" placeholder="Nombre"
+                                    style="width:100%;padding:6px 8px;border:1.5px solid #f97316;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box" />
+                                <span v-if="supplyForm.errors.name" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ supplyForm.errors.name }}</span>
+                            </template>
+                            <span v-else style="font-size:14px;font-weight:500;color:#1e293b">{{ supply.name }}</span>
+                        </td>
+
+                        <!-- Categoría -->
+                        <td style="padding:12px 18px">
+                            <template v-if="editingSupply === supply.id">
+                                <input v-model="supplyForm.category" placeholder="Categoría"
+                                    style="width:100%;padding:6px 8px;border:1.5px solid #f97316;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box" />
+                                <span v-if="supplyForm.errors.category" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ supplyForm.errors.category }}</span>
+                            </template>
+                            <span v-else style="font-size:13px;color:#64748b">{{ supply.category }}</span>
+                        </td>
+
+                        <!-- Unidad -->
+                        <td style="padding:12px 18px;text-align:center">
+                            <template v-if="editingSupply === supply.id">
+                                <input v-model="supplyForm.unit" placeholder="Kg/Ud"
+                                    style="width:75px;padding:6px 4px;border:1.5px solid #f97316;border-radius:6px;font-size:13px;text-align:center;outline:none" />
+                                <span v-if="supplyForm.errors.unit" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ supplyForm.errors.unit }}</span>
+                            </template>
+                            <span v-else style="font-size:13px;color:#475569">{{ supply.unit }}</span>
+                        </td>
+
+                        <!-- Costo / Precio -->
+                        <td style="padding:12px 18px;text-align:center">
+                            <template v-if="editingSupply === supply.id">
+                                <div style="position:relative;display:inline-block">
+                                    <span style="position:absolute;left:8px;top:50%;transform:translateY(-50%);color:#94a3b8;font-size:12px;font-weight:600">$</span>
+                                    <input 
+                                        :value="formattedEditCost"
+                                        @input="onCostEditInput"
+                                        type="text"
+                                        inputmode="numeric"
+                                        placeholder="18.000"
+                                        style="width:105px;padding:6px 6px 6px 20px;border:1.5px solid #f97316;border-radius:6px;font-size:13px;text-align:left;outline:none;box-sizing:border-box"
+                                    />
+                                </div>
+                                <span v-if="supplyForm.errors.cost" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ supplyForm.errors.cost }}</span>
+                            </template>
+                            <span v-else style="font-size:13px;font-weight:600;color:#0f172a">{{ formatPrice(supply.cost) }}</span>
+                        </td>
+
+                        <!-- Stock -->
+                        <td style="padding:12px 18px;text-align:center">
+                            <template v-if="editingSupply === supply.id">
+                                <input v-model="supplyForm.stock" type="number" step="1" min="0" placeholder="0"
+                                    style="width:75px;padding:6px 4px;border:1.5px solid #f97316;border-radius:6px;font-size:13px;text-align:center;outline:none" />
+                                <span v-if="supplyForm.errors.stock" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ supplyForm.errors.stock }}</span>
+                            </template>
+                            <span v-else :style="`font-size:14px;font-weight:700;${Math.round(Number(supply.stock)) <= Math.round(Number(supply.minimum_stock)) ? 'color:#dc2626' : 'color:#15803d'}`">
+                                {{ Math.round(Number(supply.stock)) }}
+                            </span>
+                        </td>
+
+                        <!-- Mínimo -->
+                        <td style="padding:12px 18px;text-align:center">
+                            <template v-if="editingSupply === supply.id">
+                                <input v-model="supplyForm.minimum_stock" type="number" step="1" min="0" placeholder="0"
+                                    style="width:75px;padding:6px 4px;border:1.5px solid #f97316;border-radius:6px;font-size:13px;text-align:center;outline:none" />
+                                <span v-if="supplyForm.errors.minimum_stock" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ supplyForm.errors.minimum_stock }}</span>
+                            </template>
+                            <span v-else style="font-size:13px;color:#334155">{{ Math.round(Number(supply.minimum_stock)) }}</span>
+                        </td>
+
+                        <!-- Estado -->
+                        <td style="padding:12px 18px;text-align:center">
+                            <span
+                                v-if="editingSupply === supply.id"
+                                :style="`padding:4px 10px;border-radius:9999px;font-size:11px;font-weight:600;${Math.round(Number(supplyForm.stock)) <= Math.round(Number(supplyForm.minimum_stock)) ? 'background:#fee2e2;color:#dc2626' : 'background:#dcfce7;color:#15803d'}`">
+                                {{ Math.round(Number(supplyForm.stock)) <= Math.round(Number(supplyForm.minimum_stock)) ? 'Stock Bajo' : 'Disponible' }}
+                            </span>
+                            <span
+                                v-else-if="Math.round(Number(supply.stock)) <= Math.round(Number(supply.minimum_stock))"
+                                style="background:#fee2e2;color:#dc2626;padding:4px 10px;border-radius:9999px;font-size:11px;font-weight:600">
+                                Stock Bajo
+                            </span>
+                            <span
+                                v-else
+                                style="background:#dcfce7;color:#15803d;padding:4px 10px;border-radius:9999px;font-size:11px;font-weight:600">
+                                Disponible
+                            </span>
+                        </td>
+
+                        <!-- Acciones -->
+                        <td style="padding:12px 18px;text-align:center;white-space:nowrap">
+                            <template v-if="editingSupply === supply.id">
+                                <button
+                                    @click="saveSupply(supply.id)"
+                                    :disabled="supplyForm.processing"
+                                    style="padding:5px 12px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500;margin-right:6px">
+                                    {{ supplyForm.processing ? '...' : 'Guardar' }}
+                                </button>
+                                <button
+                                    @click="cancelEditSupply"
+                                    style="padding:5px 12px;background:#f1f5f9;color:#64748b;border:none;border-radius:6px;font-size:12px;cursor:pointer">
+                                    Cancelar
+                                </button>
+                            </template>
+                            <template v-else>
+                                <button
+                                    @click="startEditSupply(supply)"
+                                    style="background:#fff7ed;color:#f97316;border:1px solid #fed7aa;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500;margin-right:6px">
+                                    Editar
+                                </button>
+                                <button
+                                    @click="deleteSupply(supply.id)"
+                                    style="background:#fef2f2;color:#dc2626;border:1px solid #fecaca;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:500">
+                                    Eliminar
+                                </button>
+                            </template>
+                        </td>
+                    </tr>
+                </tbody>
+                <tbody v-else>
+                    <tr>
+                        <td colspan="8" style="padding:2.5rem;text-align:center;color:#94a3b8;font-size:13px">
+                            No hay insumos registrados. Haz clic en "+ Nuevo insumo" para agregar el primero.
                         </td>
                     </tr>
                 </tbody>

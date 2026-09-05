@@ -12,6 +12,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\InventoryController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\SupplyController;
 
 Route::get('/', [MenuController::class, 'index'])->name('home');
 Route::middleware('guest')->group(function () {
@@ -68,5 +69,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/inventory/{product}', [InventoryController::class, 'update'])->name('admin.inventory.update');
         Route::post('/admin/inventory',                   [InventoryController::class, 'store'])->name('admin.inventory.store');
         Route::delete('/admin/inventory/{product}',       [InventoryController::class, 'destroy'])->name('admin.inventory.destroy');
+        Route::get('/admin/supplies', [SupplyController::class,'index'])->name('admin.supplies');
+        Route::post('/admin/supplies', [SupplyController::class,'store'])->name('admin.supplies.store');
+        Route::post('/admin/supplies/{supply}', [SupplyController::class,'update'])->name('admin.supplies.update');
+        Route::delete('/admin/supplies/{supply}', [SupplyController::class,'destroy'])->name('admin.supplies.destroy');
     });
 });
