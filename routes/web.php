@@ -49,6 +49,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/payments/pending/{payment}',  [PaymentController::class, 'pending'])->name('payments.pending');
     Route::get('/orders',                  [OrderController::class, 'index'])->name('orders.index');
     Route::post('/orders',                 [OrderController::class, 'store'])->name('orders.store');
+    Route::post('/orders/{order}/ready', [OrderController::class, 'markReady'])->name('orders.markReady');
     Route::get('/orders/{order}',          [OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::get('/mis-entregas',            [OrderController::class, 'repartidorOrders'])->name('orders.repartidor');

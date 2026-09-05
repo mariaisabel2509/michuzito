@@ -20,22 +20,23 @@ class Order extends Model
      * @var array
      */
     protected $fillable = [
-        'user_id',
-        'repartidor_id',
-        'vendedor_id',
-        'status',
-        'items',
-        'subtotal',
-        'tax',
-        'total',
-        'address',
-        'notes',
-        'payment_method',
-        'assigned_at',
-        'picked_up_at',
-        'delivered_at',
-        'cancelled_at',
-    ];
+    'user_id',
+    'repartidor_id',
+    'vendedor_id',
+    'status',
+    'items',
+    'subtotal',
+    'tax',
+    'total',
+    'address',
+    'notes',
+    'payment_method',
+    'assigned_at',
+    'ready_at',
+    'picked_up_at',
+    'delivered_at',
+    'cancelled_at',
+];
 
     /**
      * Conversión automática de atributos.
@@ -45,16 +46,17 @@ class Order extends Model
      *
      * @var array
      */
-    protected $casts = [
-        'items'        => 'array',
-        'subtotal'     => 'decimal:2',
-        'tax'          => 'decimal:2',
-        'total'        => 'decimal:2',
-        'assigned_at'  => 'datetime',
-        'picked_up_at' => 'datetime',
-        'delivered_at' => 'datetime',
-        'cancelled_at' => 'datetime',
-    ];
+   protected $casts = [
+    'items'        => 'array',
+    'subtotal'     => 'decimal:2',
+    'tax'          => 'decimal:2',
+    'total'        => 'decimal:2',
+    'assigned_at'  => 'datetime',
+    'ready_at'     => 'datetime',
+    'picked_up_at' => 'datetime',
+    'delivered_at' => 'datetime',
+    'cancelled_at' => 'datetime',
+];
 
     /**
      * Estados permitidos para un pedido.
