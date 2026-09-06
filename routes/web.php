@@ -12,6 +12,7 @@ use App\Http\Controllers\OrderController;
 use App\Http\Controllers\InventoryController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\SupplyController;
 
 Route::get('/', [MenuController::class, 'index'])->name('home');
 Route::middleware('guest')->group(function () {
@@ -49,6 +50,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/payments/pending/{payment}',  [PaymentController::class, 'pending'])->name('payments.pending');
     Route::get('/orders',                  [OrderController::class, 'index'])->name('orders.index');
     Route::post('/orders',                 [OrderController::class, 'store'])->name('orders.store');
+    Route::post('/orders/{order}/ready', [OrderController::class, 'markReady'])->name('orders.markReady');
     Route::get('/orders/{order}',          [OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
     Route::get('/mis-entregas',            [OrderController::class, 'repartidorOrders'])->name('orders.repartidor');
@@ -67,5 +69,9 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/admin/inventory/{product}', [InventoryController::class, 'update'])->name('admin.inventory.update');
         Route::post('/admin/inventory',                   [InventoryController::class, 'store'])->name('admin.inventory.store');
         Route::delete('/admin/inventory/{product}',       [InventoryController::class, 'destroy'])->name('admin.inventory.destroy');
+        Route::get('/admin/supplies', [SupplyController::class,'index'])->name('admin.supplies');
+        Route::post('/admin/supplies', [SupplyController::class,'store'])->name('admin.supplies.store');
+        Route::post('/admin/supplies/{supply}', [SupplyController::class,'update'])->name('admin.supplies.update');
+        Route::delete('/admin/supplies/{supply}', [SupplyController::class,'destroy'])->name('admin.supplies.destroy');
     });
 });

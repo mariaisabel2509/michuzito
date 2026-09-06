@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Notifications\OrderStatusNotification;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use App\Notifications\OrderReadyNotification;
 
 class OrderController extends Controller
 {
@@ -209,6 +210,35 @@ class OrderController extends Controller
         return back()->with('success', 'Pedido tomado correctamente.');
     }
 
+    public function markReady(Request $request, Order $order)
+{
+    $user = auth()->user();
+
+    abort_unless(
+        $user->hasRole('administrador') || $order->vendedor_id === $user->id,
+        403
+    );
+
+    if ($order->status !== 'en_proceso') {
+        return back()->withErrors(['order' => 'Solo se puede marcar como listo un pedido en proceso.']);
+    }
+
+    if ($order->ready_at) {
+        return back()->withErrors(['order' => 'Este pedido ya fue marcado como listo.']);
+    }
+
+    $order->update(['ready_at' => now()]);
+
+    activity()->causedBy($user)->performedOn($order)->log('order_marked_ready');
+
+    if ($order->repartidor && $order->repartidor->email) {
+        try {
+            $order->repartidor->notify(new \App\Notifications\OrderReadyNotification($order));
+        } catch (\Exception $e) {}
+    }
+
+    return back()->with('success', 'Pedido marcado como listo. Se notificó al repartidor.');
+}
     public function adminIndex()
     {
         $orders = Order::with(['cliente', 'repartidor', 'vendedor'])

@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { useForm, router } from '@inertiajs/vue3'
 
 const { orders } = defineProps(['orders'])
@@ -19,6 +19,10 @@ const claimOrder = (orderId) => {
 
 const updateStatus = (orderId, status) => {
     useForm({ status }).patch(`/orders/${orderId}/status`)
+}
+
+const markReady = (orderId) => {
+    useForm({}).post(`/orders/${orderId}/ready`)
 }
 </script>
 
@@ -86,18 +90,20 @@ const updateStatus = (orderId, status) => {
                     Tomar pedido
                 </button>
                 <template v-else-if="order.vendedor_id">
-                    <button v-if="order.status === 'en_proceso'" @click="updateStatus(order.id, 'en_camino')"
-                        style="flex:1;padding:10px;background:linear-gradient(135deg,#3b82f6,#1d4ed8);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">
-                        Marcar en camino
+                    <button v-if="order.status === 'en_proceso' && !order.ready_at" @click="markReady(order.id)"
+                        style="flex:1;padding:10px;background:linear-gradient(135deg,#eab308,#ca8a04);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">
+                        Marcar listo para entrega
                     </button>
+                    <div v-if="order.status === 'en_proceso' && order.ready_at" style="flex:1;padding:10px;background:#fefce8;color:#854d0e;border:1px solid #fde68a;border-radius:8px;font-size:13px;font-weight:600;text-align:center">
+                        Listo, esperando repartidor
+                    </div>
                     <button v-if="order.status === 'en_proceso'" @click="updateStatus(order.id, 'cancelado')"
                         style="padding:10px 16px;background:#fef2f2;color:#dc2626;border:1px solid #fecaca;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer">
                         Cancelar
                     </button>
-                    <button v-if="order.status === 'en_camino'" @click="updateStatus(order.id, 'entregado')"
-                        style="flex:1;padding:10px;background:linear-gradient(135deg,#22c55e,#15803d);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">
-                        Confirmar entrega
-                    </button>
+                    <div v-if="order.status === 'en_camino'" style="flex:1;padding:10px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:8px;font-size:13px;font-weight:600;text-align:center">
+                        En camino con el repartidor
+                    </div>
                     <div v-if="order.status === 'entregado'" style="flex:1;padding:10px;background:#f0fdf4;color:#15803d;border:1px solid #bbf7d0;border-radius:8px;font-size:13px;font-weight:600;text-align:center">
                         Entregado
                     </div>
