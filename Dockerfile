@@ -1,8 +1,8 @@
 # ---- Etapa 1: compilar assets de Vue/Inertia con Node ----
 FROM node:20-alpine AS frontend
 WORKDIR /app
-COPY package*.json ./
-RUN npm ci
+COPY package.json ./
+RUN npm install
 COPY . .
 RUN npm run build
 
