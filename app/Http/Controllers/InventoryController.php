@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Product;
+use App\Models\Supply;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -13,10 +14,24 @@ class InventoryController extends Controller
     {
         $products = Product::orderBy('stock')->get();
 
+        $supplies = Supply::orderBy('category')
+            ->orderBy('name')
+            ->get();
+
         return Inertia::render('Admin/Inventory', [
             'products' => $products,
+            'supplies' => $supplies,
+
             'agotados' => $products->where('stock', 0)->count(),
-            'bajos'    => $products->where('stock', '>', 0)->where('stock', '<=', 5)->count(),
+
+            'bajos' => $products
+                ->where('stock', '>', 0)
+                ->where('stock', '<=', 5)
+                ->count(),
+
+            'insumosBajos' => $supplies->filter(function ($supply) {
+                return $supply->stock <= $supply->minimum_stock;
+            })->count(),
         ]);
     }
 
@@ -35,9 +50,8 @@ class InventoryController extends Controller
             'price'        => $request->price,
         ];
 
-        // Subida de imagen local
         if ($request->hasFile('image')) {
-            // Eliminar imagen anterior si era local
+
             if ($product->image_url && str_starts_with($product->image_url, 'productos/')) {
                 Storage::disk('public')->delete($product->image_url);
             }
@@ -51,7 +65,10 @@ class InventoryController extends Controller
         activity()
             ->causedBy(auth()->user())
             ->performedOn($product)
-            ->withProperties(['stock' => $request->stock, 'is_available' => $request->is_available])
+            ->withProperties([
+                'stock' => $request->stock,
+                'is_available' => $request->is_available
+            ])
             ->log('inventory_updated');
 
         return back()->with('success', 'Inventario actualizado.');
@@ -68,7 +85,7 @@ class InventoryController extends Controller
             'image'       => 'required|image|mimes:jpg,jpeg,png,webp|max:4096',
         ], [
             'image.required' => 'Debes subir una imagen del producto.',
-            'image.mimes'    => 'Solo se permiten imagenes JPG, JPEG, PNG o WEBP.',
+            'image.mimes'    => 'Solo se permiten imágenes JPG, JPEG, PNG o WEBP.',
             'image.max'      => 'La imagen no debe superar 4MB.',
         ]);
 
@@ -84,7 +101,10 @@ class InventoryController extends Controller
             'is_available' => $request->stock > 0,
         ]);
 
-        activity()->causedBy(auth()->user())->performedOn($product)->log('product_created');
+        activity()
+            ->causedBy(auth()->user())
+            ->performedOn($product)
+            ->log('product_created');
 
         return back()->with('success', 'Producto creado correctamente.');
     }
@@ -96,7 +116,10 @@ class InventoryController extends Controller
         }
 
         $product->delete();
-        activity()->causedBy(auth()->user())->log('product_deleted');
+
+        activity()
+            ->causedBy(auth()->user())
+            ->log('product_deleted');
 
         return back()->with('success', 'Producto eliminado.');
     }

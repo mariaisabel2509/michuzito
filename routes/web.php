@@ -13,6 +13,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\InventoryController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
+use App\Http\Controllers\SupplyController;
 
 Route::get('/', [MenuController::class, 'index'])->name('home');
 Route::middleware('guest')->group(function () {
@@ -74,7 +75,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/reports/inventario', [ReportController::class, 'inventario'])->name('reports.inventario');
         Route::get('/reports/pedidos',    [ReportController::class, 'pedidos'])->name('reports.pedidos');
         Route::get('/reports/tiempos',    [ReportController::class, 'tiempos'])->name('reports.tiempos');
+        Route::get('/admin/supplies', [SupplyController::class,'index'])->name('admin.supplies');
+        Route::post('/admin/supplies', [SupplyController::class,'store'])->name('admin.supplies.store');
+        Route::post('/admin/supplies/{supply}', [SupplyController::class,'update'])->name('admin.supplies.update');
+        Route::delete('/admin/supplies/{supply}', [SupplyController::class,'destroy'])->name('admin.supplies.destroy');
     });
 });
+
 
 
