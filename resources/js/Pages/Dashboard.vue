@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { usePage, router } from '@inertiajs/vue3'
 
 const { auth } = usePage().props
@@ -47,6 +47,7 @@ const roleBgColor = roleBg[role] ?? '#f1f5f9'
                 { title: 'Pedidos', desc: 'Ver y asignar pedidos', icon: 'orders', color: '#f97316', bg: '#fff7ed', route: '/admin/orders' },
                 { title: 'Inventario', desc: 'Productos y stock', icon: 'inventory', color: '#059669', bg: '#f0fdf4', route: '/admin/inventory' },
                 { title: 'Pagos', desc: 'Aprobar y gestionar pagos', icon: 'payments', color: '#dc2626', bg: '#fef2f2', route: '/admin/payments' },
+                { title: 'Reportes', desc: 'Ventas, inventario y entregas', icon: 'reports', color: '#0d9488', bg: '#f0fdfa', route: '/reports' },
                 { title: 'Mi perfil', desc: 'Editar informacion personal', icon: 'profile', color: '#0891b2', bg: '#e0f2fe', route: '/perfil' },
             ]" :key="card.title"
             @click="router.visit(card.route)"
@@ -59,10 +60,11 @@ const roleBgColor = roleBg[role] ?? '#f1f5f9'
                     <svg v-if="card.icon==='inventory'" width="22" height="22" fill="none" :stroke="card.color" stroke-width="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
                     <svg v-if="card.icon==='payments'" width="22" height="22" fill="none" :stroke="card.color" stroke-width="2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
                     <svg v-if="card.icon==='profile'" width="22" height="22" fill="none" :stroke="card.color" stroke-width="2" viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    <svg v-if="card.icon==='reports'" width="22" height="22" fill="none" :stroke="card.color" stroke-width="2" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
                 </div>
                 <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:4px">{{ card.title }}</div>
                 <div style="font-size:13px;color:#64748b">{{ card.desc }}</div>
-                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver →</div>
+                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver â†’</div>
             </div>
         </div>
 
@@ -74,7 +76,7 @@ const roleBgColor = roleBg[role] ?? '#f1f5f9'
                 </div>
                 <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:4px">Hacer un pedido</div>
                 <div style="font-size:13px;color:#64748b">Ver el menu y ordenar</div>
-                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver menu →</div>
+                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver menu â†’</div>
             </div>
             <div @click="router.visit('/orders')" style="background:white;border-radius:12px;border:1px solid #e2e8f0;padding:1.5rem;cursor:pointer" @mouseover="$event.currentTarget.style.borderColor='#f97316'" @mouseout="$event.currentTarget.style.borderColor='#e2e8f0'">
                 <div style="width:44px;height:44px;background:#e0f2fe;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
@@ -82,7 +84,7 @@ const roleBgColor = roleBg[role] ?? '#f1f5f9'
                 </div>
                 <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:4px">Mis pedidos</div>
                 <div style="font-size:13px;color:#64748b">Historial y estado</div>
-                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver pedidos →</div>
+                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver pedidos â†’</div>
             </div>
             <div @click="router.visit('/pagos')" style="background:white;border-radius:12px;border:1px solid #e2e8f0;padding:1.5rem;cursor:pointer" @mouseover="$event.currentTarget.style.borderColor='#f97316'" @mouseout="$event.currentTarget.style.borderColor='#e2e8f0'">
                 <div style="width:44px;height:44px;background:#fef2f2;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
@@ -90,7 +92,7 @@ const roleBgColor = roleBg[role] ?? '#f1f5f9'
                 </div>
                 <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:4px">Pagos</div>
                 <div style="font-size:13px;color:#64748b">Realizar y ver pagos</div>
-                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver pagos →</div>
+                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver pagos â†’</div>
             </div>
             <div @click="router.visit('/perfil')" style="background:white;border-radius:12px;border:1px solid #e2e8f0;padding:1.5rem;cursor:pointer" @mouseover="$event.currentTarget.style.borderColor='#f97316'" @mouseout="$event.currentTarget.style.borderColor='#e2e8f0'">
                 <div style="width:44px;height:44px;background:#f0fdf4;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
@@ -98,7 +100,7 @@ const roleBgColor = roleBg[role] ?? '#f1f5f9'
                 </div>
                 <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:4px">Mi perfil</div>
                 <div style="font-size:13px;color:#64748b">Editar informacion</div>
-                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver perfil →</div>
+                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver perfil â†’</div>
             </div>
         </div>
 
@@ -110,7 +112,7 @@ const roleBgColor = roleBg[role] ?? '#f1f5f9'
                 </div>
                 <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:4px">Mis entregas</div>
                 <div style="font-size:13px;color:#64748b">Pedidos asignados a ti</div>
-                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver entregas →</div>
+                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver entregas â†’</div>
             </div>
             <div @click="router.visit('/perfil')" style="background:white;border-radius:12px;border:1px solid #e2e8f0;padding:1.5rem;cursor:pointer" @mouseover="$event.currentTarget.style.borderColor='#f97316'" @mouseout="$event.currentTarget.style.borderColor='#e2e8f0'">
                 <div style="width:44px;height:44px;background:#fff7ed;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
@@ -118,7 +120,7 @@ const roleBgColor = roleBg[role] ?? '#f1f5f9'
                 </div>
                 <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:4px">Mi perfil</div>
                 <div style="font-size:13px;color:#64748b">Editar informacion</div>
-                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver perfil →</div>
+                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver perfil â†’</div>
             </div>
         </div>
 
@@ -130,7 +132,7 @@ const roleBgColor = roleBg[role] ?? '#f1f5f9'
                 </div>
                 <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:4px">Pedidos</div>
                 <div style="font-size:13px;color:#64748b">Gestionar pedidos</div>
-                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver pedidos →</div>
+                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver pedidos â†’</div>
             </div>
             <div @click="router.visit('/perfil')" style="background:white;border-radius:12px;border:1px solid #e2e8f0;padding:1.5rem;cursor:pointer" @mouseover="$event.currentTarget.style.borderColor='#f97316'" @mouseout="$event.currentTarget.style.borderColor='#e2e8f0'">
                 <div style="width:44px;height:44px;background:#f0fdf4;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:12px">
@@ -138,10 +140,11 @@ const roleBgColor = roleBg[role] ?? '#f1f5f9'
                 </div>
                 <div style="font-size:15px;font-weight:600;color:#1e293b;margin-bottom:4px">Mi perfil</div>
                 <div style="font-size:13px;color:#64748b">Editar informacion</div>
-                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver perfil →</div>
+                <div style="margin-top:12px;font-size:12px;color:#f97316;font-weight:500">Ver perfil â†’</div>
             </div>
         </div>
 
     </div>
 </div>
 </template>
+
