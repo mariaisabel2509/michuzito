@@ -1,4 +1,21 @@
-<script setup>
+﻿<script setup>
+/**
+ * Orders/RepartidorOrders.vue — "Mis entregas" (vista del repartidor).
+ *
+ * Alimentado por OrderController::repartidorOrders(), que ya trae los
+ * pedidos ordenados por relevancia operativa (en_camino primero).
+ * El único botón de acción disponible depende de dos campos del
+ * backend a la vez, no solo de `status`:
+ *   - Si status=en_proceso y ready_at es null -> el vendedor aún no
+ *     alistó el pedido (ver OrderController::markReady), se muestra
+ *     el aviso "Esperando..." sin botón.
+ *   - Si status=en_proceso y ready_at SÍ tiene valor -> aparece
+ *     "Recoger pedido", que dispara updateStatus a en_camino.
+ *   - Si status=en_camino -> aparece "Confirmar entrega", que dispara
+ *     updateStatus a entregado.
+ * Esto refleja en el frontend el mismo "puente" ready_at que existe
+ * en el backend entre vendedor y repartidor.
+ */
 import { useForm, router } from '@inertiajs/vue3'
 
 const { orders } = defineProps(['orders'])
@@ -13,6 +30,8 @@ const statusColors = {
 const formatPrice = (p) => '$' + Number(p).toLocaleString('es-CO')
 const formatDate  = (d) => new Date(d).toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' })
 
+// Llama a OrderController::updateStatus, que valida la transición
+// contra Order::canTransitionTo antes de aplicarla.
 const updateStatus = (orderId, status) => {
     useForm({ status }).patch(`/orders/${orderId}/status`)
 }

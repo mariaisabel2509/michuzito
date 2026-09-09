@@ -1,4 +1,11 @@
 ﻿<script setup>
+/**
+ * Reports/Index.vue — Menu principal de reportes (solo administrador).
+ *
+ * Es puramente de navegación: cada tarjeta enlaza a uno de los 4
+ * reportes calculados en ReportController (ventas, inventario,
+ * pedidos, tiempos). No recibe props porque no muestra datos propios.
+ */
 import { router } from '@inertiajs/vue3'
 </script>
 

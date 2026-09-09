@@ -1,4 +1,17 @@
 ﻿<script setup>
+/**
+ * Reports/Ventas.vue — Reporte de Ventas.
+ *
+ * Recibe de ReportController::ventas() los totales ya calculados en
+ * el backend (totalVentas y productosMasVendidos solo consideran
+ * pedidos entregado; totalPedidos cuenta todos los estados del rango
+ * — por eso pueden no coincidir, ver comentario en el controlador).
+ * El filtro de fechas (filtrar) no usa Inertia sino una navegacion de
+ * navegador normal (window.location.href) porque solo cambia el query
+ * string de la misma ruta GET. Los botones de descarga NO piden datos
+ * nuevos al servidor: generan el PDF/Excel en el navegador a partir de
+ * los props que ya se cargaron con la pagina.
+ */
 import { router } from '@inertiajs/vue3'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'

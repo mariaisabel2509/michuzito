@@ -1,4 +1,12 @@
 ﻿<script setup>
+/**
+ * Reports/Inventario.vue — Reporte de Inventario.
+ *
+ * A diferencia de Ventas/Pedidos/Tiempos, no tiene filtro de fechas:
+ * ReportController::inventario() siempre devuelve el estado actual
+ * (una "foto" del momento), así que aquí no hay input de rango ni
+ * botón "Filtrar", solo descarga de PDF/Excel con lo ya cargado.
+ */
 import { router } from '@inertiajs/vue3'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'

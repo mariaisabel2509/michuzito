@@ -1,10 +1,20 @@
-<script setup>
+﻿<script setup>
+/**
+ * Orders/Index.vue — Historial de pedidos del cliente.
+ *
+ * Recibe la lista `orders` ya filtrada por usuario desde
+ * OrderController::index() (ordenada del más reciente al más antiguo).
+ * Es de solo lectura: cada tarjeta lleva al detalle (Orders/Show.vue);
+ * la creación de pedidos ocurre en el menú público, no aquí.
+ */
 import { router, usePage } from '@inertiajs/vue3'
 
 const { orders } = defineProps(['orders'])
 const { auth } = usePage().props
 const logout = () => router.post('/logout')
 
+// Debe reflejar exactamente los mismos 4 estados y transiciones
+// definidos en Order::STATUSES / canTransitionTo (backend).
 const statusColors = {
     en_proceso: { bg: '#fff7ed', color: '#c2410c', label: 'En proceso' },
     en_camino:  { bg: '#eff6ff', color: '#1d4ed8', label: 'En camino' },
