@@ -85,8 +85,11 @@ class OrderController extends Controller
             } catch (\Exception $e) {}
         }
 
-        return redirect()->route('orders.show', $order->id)
-            ->with('success', 'Pedido creado correctamente.');
+        // CAMBIO: antes redirigia directo a orders.show, saltandose el
+        // paso de pago. Ahora manda a la pantalla de pago (Payments/Create),
+        // que es donde se registra el efectivo o se inicia PayPal.
+        return redirect()->route('payments.show', $order->id)
+            ->with('success', 'Pedido creado. Ahora completa el pago.');
     }
 
     public function index(Request $request)
