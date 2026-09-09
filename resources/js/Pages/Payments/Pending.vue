@@ -15,7 +15,7 @@ const logout = () => router.post('/logout')
 
         <h1 style="font-size:22px;font-weight:700;color:#1e293b;margin-bottom:8px">Pago pendiente</h1>
         <p style="font-size:14px;color:#64748b;line-height:1.6;margin-bottom:2rem">
-            Tu transferencia ha sido registrada. El administrador validara el pago y generara tu factura automaticamente.
+            Tu pago en efectivo ha sido registrado. El administrador confirmara la recepcion del dinero y tu factura se generara automaticamente.
         </p>
 
         <div style="background:#f8fafc;border-radius:10px;padding:1.5rem;margin-bottom:2rem;text-align:left">
@@ -26,10 +26,6 @@ const logout = () => router.post('/logout')
             <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px;border-bottom:1px solid #e2e8f0">
                 <span style="color:#64748b">Monto</span>
                 <span style="font-weight:500;color:#1e293b">${{ Number(payment.amount).toLocaleString('es-CO') }}</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px;border-bottom:1px solid #e2e8f0">
-                <span style="color:#64748b">Referencia</span>
-                <span style="font-weight:500;color:#1e293b">{{ payment.reference }}</span>
             </div>
             <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:14px">
                 <span style="color:#64748b">Estado</span>

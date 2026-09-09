@@ -61,7 +61,7 @@ class OrderController extends Controller
             'items.*.qty'    => 'required|integer|min:1',
             'items.*.note'   => 'nullable|string|max:300',
             'address'        => 'required|string|max:255|min:10',
-            'payment_method' => 'required|in:efectivo,transferencia',
+            'payment_method' => 'required|in:efectivo,paypal',
             'notes'          => 'nullable|string|max:500',
         ], [
             'address.required' => 'La direccion de entrega es obligatoria.',
@@ -101,7 +101,6 @@ class OrderController extends Controller
         $tax   = round($subtotal * 0.19, 2);
         $total = $subtotal + $tax;
 
-        // Como solo existe un repartidor en el sistema, se asigna automaticamente
         $repartidor = User::role('repartidor')->where('is_active', true)->first();
 
         $order = Order::create([
@@ -128,7 +127,6 @@ class OrderController extends Controller
 
         activity()->causedBy($user)->performedOn($order)->log('order_created');
 
-        // Notificar al unico repartidor del nuevo pedido
         if ($repartidor && $repartidor->email) {
             try {
                 $repartidor->notify(new OrderStatusNotification($order));
@@ -611,8 +609,7 @@ class OrderController extends Controller
      * de asignación manual en el frontend (ver assignRepartidor).
      *
      * @return \Inertia\Response Vista Orders/AdminOrders.
-     */
-    public function adminIndex()
+     */    public function adminIndex()
     {
         $orders = Order::with(['cliente', 'repartidor', 'vendedor'])
             ->orderBy('created_at', 'desc')

@@ -4,6 +4,9 @@ import { usePage, router, useForm } from '@inertiajs/vue3'
 
 const { products, categories } = defineProps(['products', 'categories'])
 const { auth } = usePage().props
+console.log('Productos:', products)
+console.log('Categorías:', categories)
+console.log('Usuario:', auth.user)
 
 const selectedCategory = ref('Todos')
 const cart = ref([])
@@ -182,7 +185,7 @@ const submitOrder = () => {
     <!-- Contenido -->
     <div style="max-width:1200px;margin:0 auto;padding:2rem 1rem">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
-            <h1 style="font-size:28px;font-weight:700;color:#1e293b;margin:0">Nuestro Menu</h1>
+            <h1 style="font-size:28px;font-weight:700;color:#1e293b;margin:0">Prueba Nuestro Menu</h1>
             <div style="font-size:13px;color:#64748b">{{ filteredProducts.length }} productos disponibles</div>
         </div>
 
@@ -230,7 +233,7 @@ const submitOrder = () => {
                     style="width:100%;padding:11px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:14px;outline:none;box-sizing:border-box;margin-top:6px;resize:vertical;min-height:80px"
                     @focus="$event.target.style.borderColor='#f97316'"
                     @blur="$event.target.style.borderColor='#e2e8f0'"></textarea>
-                <p style="font-size:11px;color:#94a3b8;margin-top:6px">Indica salsas, acompañamientos o cualquier preferencia para este producto.</p>
+                <p style="font-size:11px;color:#94a3b8;margin-top:6px">Indica salsas, acompaÃ±amientos o cualquier preferencia para este producto.</p>
 
                 <div style="display:flex;gap:8px;margin-top:1.25rem">
                     <button @click="showCustomize=false" style="flex:1;padding:11px;border:1.5px solid #e2e8f0;border-radius:8px;background:white;font-size:13px;color:#64748b;cursor:pointer">Cancelar</button>
@@ -327,8 +330,8 @@ const submitOrder = () => {
                         <div @click="checkoutForm.payment_method='efectivo'" :style="`padding:12px;border-radius:8px;border:2px solid;text-align:center;cursor:pointer;${checkoutForm.payment_method==='efectivo' ? 'border-color:#f97316;background:#fff7ed' : 'border-color:#e2e8f0'}`">
                             <div style="font-size:13px;font-weight:500" :style="checkoutForm.payment_method==='efectivo' ? 'color:#f97316' : 'color:#64748b'">Efectivo</div>
                         </div>
-                        <div @click="checkoutForm.payment_method='transferencia'" :style="`padding:12px;border-radius:8px;border:2px solid;text-align:center;cursor:pointer;${checkoutForm.payment_method==='transferencia' ? 'border-color:#f97316;background:#fff7ed' : 'border-color:#e2e8f0'}`">
-                            <div style="font-size:13px;font-weight:500" :style="checkoutForm.payment_method==='transferencia' ? 'color:#f97316' : 'color:#64748b'">Transferencia</div>
+                        <div @click="checkoutForm.payment_method='paypal'" :style="`padding:12px;border-radius:8px;border:2px solid;text-align:center;cursor:pointer;${checkoutForm.payment_method==='paypal' ? 'border-color:#f97316;background:#fff7ed' : 'border-color:#e2e8f0'}`">
+                            <div style="font-size:13px;font-weight:500" :style="checkoutForm.payment_method==='paypal' ? 'color:#f97316' : 'color:#64748b'">PayPal</div>
                         </div>
                     </div>
                 </div>

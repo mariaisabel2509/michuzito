@@ -39,6 +39,17 @@ class Payment extends Model
         return $this->hasOne(Invoice::class);
     }
 
+    /**
+     * RELACIÓN:        Payment pertenece a un Order (belongsTo, 1 pago → 1 pedido)
+     * USADA DESDE:     PaymentController (próximo paso) para validar que el
+     *                  pedido exista y pertenezca al usuario antes de cobrar
+     * PERMITE:         $payment->order  →  accede al pedido asociado
+     */
+    public function order()
+    {
+        return $this->belongsTo(Order::class);
+    }
+
     // RF-006: Encriptar datos sensibles
     public function setEncryptedDataAttribute($value)
     {

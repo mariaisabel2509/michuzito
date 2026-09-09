@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Payment;
 use App\Models\Invoice;
+use App\Models\Order;
 use App\Notifications\PaymentConfirmedNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -11,57 +12,67 @@ use Inertia\Inertia;
 
 class PaymentController extends Controller
 {
-    // Mostrar formulario de pago
-    public function show(Request $request)
+    public function show(Request $request, Order $order)
     {
+        abort_unless($order->user_id === $request->user()->id, 403);
+
+        if ($order->payment) {
+            return redirect()->route('payments.invoice', $order->payment->invoice->id)
+                ->with('success', 'Este pedido ya fue pagado.');
+        }
+
         return Inertia::render('Payments/Create', [
-            'user' => $request->user()->load('profile'),
+            'user'  => $request->user()->load('profile'),
+            'order' => $order,
         ]);
     }
 
-    // RF-005: Procesar pago
-    public function store(Request $request)
+    /**
+     * RUTA:  POST /pagos/{order}
+     * Unico metodo que llega por este formulario: 'efectivo'.
+     * PayPal usa su propio flujo en PayPalController (checkout/success).
+     * CAMBIO: el pago en efectivo YA NO se aprueba automaticamente;
+     * queda 'pendiente' hasta que un administrador lo confirme (approve()).
+     */
+    public function store(Request $request, Order $order)
     {
+        abort_unless($order->user_id === $request->user()->id, 403);
+        abort_if($order->payment, 409, 'Este pedido ya fue pagado.');
+
         $request->validate([
-            'method'    => 'required|in:efectivo,transferencia',
-            'amount'    => 'required|numeric|min:0.01',
-            'reference' => 'required_if:method,transferencia|nullable|string',
-            'notes'     => 'nullable|string|max:500',
+            'method' => 'required|in:efectivo',
+            'notes'  => 'nullable|string|max:500',
         ]);
 
         $user = $request->user();
-
-        // RF-006: Generar token de autenticacion
+        $amount = $order->total;
         $token = Str::random(64);
 
         $payment = Payment::create([
             'user_id'           => $user->id,
-            'method'            => $request->method,
-            'amount'            => $request->amount,
-            'status'            => $request->method === 'efectivo' ? 'aprobado' : 'pendiente',
-            'reference'         => $request->reference,
+            'order_id'          => $order->id,
+            'method'            => 'efectivo',
+            'amount'            => $amount,
+            'status'            => 'pendiente',
+            'reference'         => null,
             'transaction_token' => hash('sha256', $token),
             'notes'             => $request->notes,
-            'paid_at'           => $request->method === 'efectivo' ? now() : null,
+            'paid_at'           => null,
         ]);
 
-        // RF-007: Generar factura si pago aprobado
-        if ($payment->status === 'aprobado') {
-            $invoice = $this->generateInvoice($payment, $user);
-            $user->notify(new PaymentConfirmedNotification($payment, $invoice));
-
-            return redirect()->route('payments.invoice', $invoice->id)
-                ->with('success', 'Pago registrado y factura generada.');
-        }
-
         return redirect()->route('payments.pending', $payment->id)
-            ->with('success', 'Pago registrado. Pendiente de confirmacion.');
+            ->with('success', 'Pago registrado. Pendiente de confirmacion por el administrador.');
     }
 
-    // RF-005: Aprobar transferencia (admin)
+    /**
+     * RUTA: PATCH /admin/payments/{payment}/approve
+     * Confirma un pago en efectivo. SOLO administrador (verificado en
+     * backend con hasRole, no solo ocultando el boton en Vue).
+     */
     public function approve(Request $request, Payment $payment)
     {
         abort_unless(auth()->user()->hasRole('administrador'), 403);
+        abort_if($payment->status === 'aprobado', 409, 'Este pago ya fue aprobado.');
 
         $payment->update([
             'status'  => 'aprobado',
@@ -71,10 +82,9 @@ class PaymentController extends Controller
         $invoice = $this->generateInvoice($payment, $payment->user);
         $payment->user->notify(new PaymentConfirmedNotification($payment, $invoice));
 
-        return back()->with('success', 'Pago aprobado y factura generada.');
+        return back()->with('success', 'Pago confirmado y factura generada.');
     }
 
-    // Ver factura
     public function invoice(Invoice $invoice)
     {
         abort_unless(
@@ -87,7 +97,6 @@ class PaymentController extends Controller
         ]);
     }
 
-    // Ver pago pendiente
     public function pending(Payment $payment)
     {
         abort_unless(auth()->id() === $payment->user_id, 403);
@@ -97,46 +106,12 @@ class PaymentController extends Controller
         ]);
     }
 
-    // Lista de pagos para admin
     public function index()
     {
         return Inertia::render('Payments/Index', [
             'payments' => Payment::with(['user', 'invoice'])
                 ->orderBy('created_at', 'desc')
                 ->paginate(20),
-        ]);
-    }
-
-    // RF-007: Generar factura electronica
-    private function generateInvoice(Payment $payment, $user): Invoice
-    {
-        $items = [
-            [
-                'descripcion'    => 'Pago ' . $payment->method,
-                'cantidad'       => 1,
-                'valor_unitario' => $payment->amount,
-                'subtotal'       => $payment->amount,
-            ]
-        ];
-
-        $subtotal = $payment->amount;
-        $tax      = round($subtotal * 0.19, 2); // IVA 19%
-        $total    = $subtotal + $tax;
-
-        return Invoice::create([
-            'payment_id'      => $payment->id,
-            'user_id'         => $user->id,
-            'invoice_number'  => Invoice::generateInvoiceNumber(),
-            'subtotal'        => $subtotal,
-            'tax'             => $tax,
-            'total'           => $total,
-            'status'          => 'activa',
-            'items'           => $items,
-            'client_name'     => $user->name,
-            'client_email'    => $user->email,
-            'client_phone'    => $user->phone,
-            'client_document' => $user->profile?->document_number,
-            'issued_at'       => now(),
         ]);
     }
 }

@@ -1,6 +1,14 @@
 <script setup>
 import { useForm, router } from '@inertiajs/vue3'
-import { ref } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+
+const props = defineProps([
+    'products',
+    'supplies',
+    'agotados',
+    'bajos',
+    'insumosBajos'
+])
 
 const {
     products,
@@ -8,13 +16,47 @@ const {
     agotados,
     bajos,
     insumosBajos
-} = defineProps([
-    'products',
-    'supplies',
-    'agotados',
-    'bajos',
-    'insumosBajos'
-])
+} = props
+
+const defaultSupplyCategories = [
+    'Carnes',
+    'Tubérculos',
+    'Panadería',
+    'Lácteos',
+    'Salsas',
+    'Verduras',
+    'Bebidas',
+    'Condimentos',
+    'Empaques y Desechables',
+    'Abarrotes',
+    'Otros'
+]
+
+const defaultUnits = [
+    'Kg',
+    'g',
+    'Litros',
+    'ml',
+    'Unidades',
+    'Paquetes',
+    'Porciones',
+    'Cajas',
+    'Latas',
+    'Botellas'
+]
+
+const availableCategories = computed(() => {
+    const existing = (props.supplies || [])
+        .map(s => s.category)
+        .filter(c => Boolean(c) && c !== 'Otros')
+    const defaultsWithoutOtros = defaultSupplyCategories.filter(c => c !== 'Otros')
+    return [...Array.from(new Set([...defaultsWithoutOtros, ...existing])), 'Otros']
+})
+
+const availableUnits = computed(() => {
+    const existing = (props.supplies || []).map(s => s.unit).filter(Boolean)
+    return Array.from(new Set([...defaultUnits, ...existing]))
+})
 const editForm   = useForm({ stock: 0, is_available: true, price: 0, image: null })
 const createForm = useForm({ name: '', description: '', price: '', category: '', stock: '', image: null })
 const supplyForm = useForm({
@@ -37,6 +79,87 @@ const editingSupply = ref(null)
 const showCreateSupply = ref(false)
 const formattedCreateCost = ref('')
 const formattedEditCost = ref('')
+const selectedCreateCategory = ref('')
+const customCreateCategory = ref('')
+const selectedEditCategory = ref('')
+const customEditCategory = ref('')
+
+const openCategoryDropdown = ref(false)
+const openUnitDropdown = ref(false)
+
+const toggleCategoryDropdown = () => {
+    openCategoryDropdown.value = !openCategoryDropdown.value
+    if (openCategoryDropdown.value) {
+        openUnitDropdown.value = false
+    }
+}
+
+const toggleUnitDropdown = () => {
+    openUnitDropdown.value = !openUnitDropdown.value
+    if (openUnitDropdown.value) {
+        openCategoryDropdown.value = false
+    }
+}
+
+const selectCategory = (cat) => {
+    selectedCreateCategory.value = cat
+    onCategorySelectChange()
+    openCategoryDropdown.value = false
+}
+
+const selectUnit = (u) => {
+    createSupplyForm.unit = u
+    openUnitDropdown.value = false
+}
+
+const closeDropdowns = (e) => {
+    if (!e.target.closest('.custom-select-category')) {
+        openCategoryDropdown.value = false
+    }
+    if (!e.target.closest('.custom-select-unit')) {
+        openUnitDropdown.value = false
+    }
+}
+
+onMounted(() => {
+    document.addEventListener('click', closeDropdowns)
+})
+
+onUnmounted(() => {
+    document.removeEventListener('click', closeDropdowns)
+})
+
+const onCategorySelectChange = () => {
+    if (selectedCreateCategory.value === 'Otros') {
+        createSupplyForm.category = customCreateCategory.value
+    } else {
+        createSupplyForm.category = selectedCreateCategory.value
+        customCreateCategory.value = ''
+    }
+}
+
+const onCustomCategoryInput = (e) => {
+    customCreateCategory.value = e.target.value
+    if (selectedCreateCategory.value === 'Otros') {
+        createSupplyForm.category = e.target.value
+    }
+}
+
+const onEditCategorySelectChange = () => {
+    if (selectedEditCategory.value === 'Otros') {
+        supplyForm.category = customEditCategory.value
+    } else {
+        supplyForm.category = selectedEditCategory.value
+        customEditCategory.value = ''
+    }
+}
+
+const onCustomEditCategoryInput = (e) => {
+    customEditCategory.value = e.target.value
+    if (selectedEditCategory.value === 'Otros') {
+        supplyForm.category = e.target.value
+    }
+}
 
 const formatThousands = (val) => {
     if (!val && val !== 0) return ''
@@ -70,29 +193,57 @@ const onCostEditInput = (e) => {
 }
 
 const saveSupply = (id) => {
+    if (selectedEditCategory.value === 'Otros') {
+        supplyForm.category = customEditCategory.value.trim()
+    } else {
+        supplyForm.category = selectedEditCategory.value
+    }
     supplyForm.post(`/admin/supplies/${id}`, {
         onSuccess: () => {
             editingSupply.value = null
             supplyForm.reset()
             formattedEditCost.value = ''
+            selectedEditCategory.value = ''
+            customEditCategory.value = ''
         }
     })
 }
 
 const submitCreateSupply = () => {
+    if (selectedCreateCategory.value === 'Otros') {
+        createSupplyForm.category = customCreateCategory.value.trim()
+    } else {
+        createSupplyForm.category = selectedCreateCategory.value
+    }
     createSupplyForm.post('/admin/supplies', {
         onSuccess: () => {
             showCreateSupply.value = false
             createSupplyForm.reset()
             formattedCreateCost.value = ''
+            selectedCreateCategory.value = ''
+            customCreateCategory.value = ''
+            openCategoryDropdown.value = false
+            openUnitDropdown.value = false
         }
     })
+}
+
+const cancelCreateSupply = () => {
+    showCreateSupply.value = false
+    createSupplyForm.reset()
+    formattedCreateCost.value = ''
+    selectedCreateCategory.value = ''
+    customCreateCategory.value = ''
+    openCategoryDropdown.value = false
+    openUnitDropdown.value = false
 }
 
 const cancelEditSupply = () => {
     editingSupply.value = null
     supplyForm.reset()
     formattedEditCost.value = ''
+    selectedEditCategory.value = ''
+    customEditCategory.value = ''
 }
 const editingId   = ref(null)
 const showCreate  = ref(false)
@@ -149,7 +300,9 @@ const startEditSupply = (supply) => {
     editingSupply.value = supply.id
     supplyForm.clearErrors()
     supplyForm.name = supply.name
+    selectedEditCategory.value = supply.category
     supplyForm.category = supply.category
+    customEditCategory.value = ''
     supplyForm.unit = supply.unit
     const costNum = Math.round(Number(supply.cost)) || 0
     supplyForm.cost = costNum
@@ -398,7 +551,7 @@ const deleteSupply = (id) => {
                     </p>
                 </div>
                 <button
-                    @click="showCreateSupply = !showCreateSupply"
+                    @click="showCreateSupply ? cancelCreateSupply() : showCreateSupply = true"
                     style="
                         padding:9px 18px;
                         background:linear-gradient(135deg,#f97316,#ea580c);
@@ -423,16 +576,86 @@ const deleteSupply = (id) => {
                             style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;margin-top:4px" />
                         <span v-if="createSupplyForm.errors.name" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ createSupplyForm.errors.name }}</span>
                     </div>
-                    <div>
+                    <div class="custom-select-category" :style="openCategoryDropdown ? 'position:relative;z-index:40' : 'position:relative;z-index:10'">
                         <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase">Categoría</label>
-                        <input v-model="createSupplyForm.category" placeholder="Ej: Carnes / Verduras"
-                            style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;margin-top:4px" />
+                        <div class="custom-dropdown-container">
+                            <button
+                                type="button"
+                                class="custom-dropdown-btn"
+                                :class="{ 'is-active': openCategoryDropdown }"
+                                @click="toggleCategoryDropdown"
+                            >
+                                <span :class="{ 'placeholder': !selectedCreateCategory }">
+                                    {{ selectedCreateCategory || 'Selecciona una categoría' }}
+                                </span>
+                                <svg class="custom-dropdown-arrow" :class="{ 'is-rotated': openCategoryDropdown }" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+
+                            <transition name="dropdown-anim">
+                                <ul v-if="openCategoryDropdown" class="custom-dropdown-menu">
+                                    <li
+                                        v-for="cat in availableCategories"
+                                        :key="cat"
+                                        class="custom-dropdown-item"
+                                        :class="{ 'is-selected': selectedCreateCategory === cat }"
+                                        @click="selectCategory(cat)"
+                                    >
+                                        <span>{{ cat }}</span>
+                                        <svg v-if="selectedCreateCategory === cat" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </li>
+                                </ul>
+                            </transition>
+                        </div>
+                        <span v-if="createSupplyForm.errors.category && selectedCreateCategory !== 'Otros'" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ createSupplyForm.errors.category }}</span>
+                    </div>
+                    <div v-if="selectedCreateCategory === 'Otros'">
+                        <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase">Especificar categoría</label>
+                        <input v-model="customCreateCategory"
+                            @input="onCustomCategoryInput"
+                            placeholder="Nombre de la categoría"
+                            style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;margin-top:4px"
+                            @focus="$event.target.style.borderColor='#f97316'"
+                            @blur="$event.target.style.borderColor='#e2e8f0'" />
                         <span v-if="createSupplyForm.errors.category" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ createSupplyForm.errors.category }}</span>
                     </div>
-                    <div>
+                    <div class="custom-select-unit" :style="openUnitDropdown ? 'position:relative;z-index:40' : 'position:relative;z-index:10'">
                         <label style="font-size:11px;font-weight:600;color:#64748b;text-transform:uppercase">Unidad</label>
-                        <input v-model="createSupplyForm.unit" placeholder="Ej: Kg, Litros, Unidades"
-                            style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;outline:none;box-sizing:border-box;margin-top:4px" />
+                        <div class="custom-dropdown-container">
+                            <button
+                                type="button"
+                                class="custom-dropdown-btn"
+                                :class="{ 'is-active': openUnitDropdown }"
+                                @click="toggleUnitDropdown"
+                            >
+                                <span :class="{ 'placeholder': !createSupplyForm.unit }">
+                                    {{ createSupplyForm.unit || 'Selecciona una unidad' }}
+                                </span>
+                                <svg class="custom-dropdown-arrow" :class="{ 'is-rotated': openUnitDropdown }" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+
+                            <transition name="dropdown-anim">
+                                <ul v-if="openUnitDropdown" class="custom-dropdown-menu">
+                                    <li
+                                        v-for="u in availableUnits"
+                                        :key="u"
+                                        class="custom-dropdown-item"
+                                        :class="{ 'is-selected': createSupplyForm.unit === u }"
+                                        @click="selectUnit(u)"
+                                    >
+                                        <span>{{ u }}</span>
+                                        <svg v-if="createSupplyForm.unit === u" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/>
+                                        </svg>
+                                    </li>
+                                </ul>
+                            </transition>
+                        </div>
                         <span v-if="createSupplyForm.errors.unit" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ createSupplyForm.errors.unit }}</span>
                     </div>
                     <div>
@@ -470,7 +693,7 @@ const deleteSupply = (id) => {
                         style="padding:8px 18px;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer">
                         {{ createSupplyForm.processing ? 'Guardando...' : 'Crear insumo' }}
                     </button>
-                    <button @click="showCreateSupply=false;createSupplyForm.reset()"
+                    <button @click="cancelCreateSupply"
                         style="padding:8px 18px;background:#f1f5f9;color:#64748b;border:none;border-radius:8px;font-size:13px;cursor:pointer">
                         Cancelar
                     </button>
@@ -510,8 +733,17 @@ const deleteSupply = (id) => {
                         <!-- Categoría -->
                         <td style="padding:12px 18px">
                             <template v-if="editingSupply === supply.id">
-                                <input v-model="supplyForm.category" placeholder="Categoría"
-                                    style="width:100%;padding:6px 8px;border:1.5px solid #f97316;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box" />
+                                <select v-model="selectedEditCategory"
+                                    @change="onEditCategorySelectChange"
+                                    style="width:100%;padding:6px 8px;border:1.5px solid #f97316;border-radius:6px;font-size:13px;outline:none;box-sizing:border-box;background-color:#ffffff;color:#1e293b;cursor:pointer">
+                                    <option value="" disabled>Seleccionar</option>
+                                    <option v-for="cat in availableCategories" :key="cat" :value="cat">{{ cat }}</option>
+                                </select>
+                                <input v-if="selectedEditCategory === 'Otros'"
+                                    v-model="customEditCategory"
+                                    @input="onCustomEditCategoryInput"
+                                    placeholder="Especificar categoría"
+                                    style="width:100%;padding:6px 8px;border:1.5px solid #f97316;border-radius:6px;font-size:12px;outline:none;box-sizing:border-box;margin-top:4px" />
                                 <span v-if="supplyForm.errors.category" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ supplyForm.errors.category }}</span>
                             </template>
                             <span v-else style="font-size:13px;color:#64748b">{{ supply.category }}</span>
@@ -520,8 +752,11 @@ const deleteSupply = (id) => {
                         <!-- Unidad -->
                         <td style="padding:12px 18px;text-align:center">
                             <template v-if="editingSupply === supply.id">
-                                <input v-model="supplyForm.unit" placeholder="Kg/Ud"
-                                    style="width:75px;padding:6px 4px;border:1.5px solid #f97316;border-radius:6px;font-size:13px;text-align:center;outline:none" />
+                                <select v-model="supplyForm.unit"
+                                    style="width:85px;padding:6px 4px;border:1.5px solid #f97316;border-radius:6px;font-size:13px;text-align:center;outline:none;background-color:#ffffff;color:#1e293b;cursor:pointer">
+                                    <option value="" disabled>Unidad</option>
+                                    <option v-for="u in availableUnits" :key="u" :value="u">{{ u }}</option>
+                                </select>
                                 <span v-if="supplyForm.errors.unit" style="color:#dc2626;font-size:11px;display:block;margin-top:2px">{{ supplyForm.errors.unit }}</span>
                             </template>
                             <span v-else style="font-size:13px;color:#475569">{{ supply.unit }}</span>
@@ -630,3 +865,132 @@ const deleteSupply = (id) => {
     </div>
 </div>
 </template>
+
+<style scoped>
+.custom-dropdown-container {
+    position: relative;
+    width: 100%;
+}
+
+.custom-dropdown-btn {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1.5px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    background-color: #ffffff;
+    color: #1e293b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    outline: none;
+    box-sizing: border-box;
+    margin-top: 4px;
+    text-align: left;
+    user-select: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.custom-dropdown-btn:hover {
+    border-color: #cbd5e1;
+}
+
+.custom-dropdown-btn:focus,
+.custom-dropdown-btn.is-active {
+    border-color: #f97316;
+    box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.15);
+}
+
+.custom-dropdown-btn .placeholder {
+    color: #94a3b8;
+}
+
+.custom-dropdown-arrow {
+    width: 16px;
+    height: 16px;
+    color: #64748b;
+    transition: transform 0.2s ease, color 0.2s ease;
+    flex-shrink: 0;
+    margin-left: 6px;
+}
+
+.custom-dropdown-arrow.is-rotated {
+    transform: rotate(180deg);
+    color: #ea580c;
+}
+
+.custom-dropdown-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    z-index: 60;
+    background: #ffffff;
+    border: 1.5px solid #fed7aa;
+    border-radius: 8px;
+    box-shadow: 0 10px 25px -5px rgba(234, 88, 12, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+    max-height: 210px;
+    overflow-y: auto;
+    padding: 4px;
+    margin: 0;
+    list-style: none;
+}
+
+.custom-dropdown-menu::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-dropdown-menu::-webkit-scrollbar-track {
+    background: #fffaf0;
+    border-radius: 4px;
+}
+.custom-dropdown-menu::-webkit-scrollbar-thumb {
+    background: #fed7aa;
+    border-radius: 4px;
+}
+.custom-dropdown-menu::-webkit-scrollbar-thumb:hover {
+    background: #fb923c;
+}
+
+.custom-dropdown-item {
+    padding: 8px 10px;
+    font-size: 13px;
+    border-radius: 6px;
+    cursor: pointer;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background-color 0.15s ease, color 0.15s ease;
+    user-select: none;
+}
+
+/* Naranja claro en hover */
+.custom-dropdown-item:hover {
+    background-color: #ffedd5 !important;
+    color: #9a3412 !important;
+}
+
+/* Elemento seleccionado con tono naranja */
+.custom-dropdown-item.is-selected {
+    background-color: #fed7aa;
+    color: #7c2d12;
+    font-weight: 600;
+}
+
+.custom-dropdown-item.is-selected:hover {
+    background-color: #fdba74 !important;
+    color: #7c2d12 !important;
+}
+
+.dropdown-anim-enter-active,
+.dropdown-anim-leave-active {
+    transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.dropdown-anim-enter-from,
+.dropdown-anim-leave-to {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+}
+</style>
