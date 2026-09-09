@@ -4,6 +4,9 @@ import { usePage, router, useForm } from '@inertiajs/vue3'
 
 const { products, categories } = defineProps(['products', 'categories'])
 const { auth } = usePage().props
+console.log('Productos:', products)
+console.log('Categorías:', categories)
+console.log('Usuario:', auth.user)
 
 const selectedCategory = ref('Todos')
 const cart = ref([])
@@ -182,7 +185,7 @@ const submitOrder = () => {
     <!-- Contenido -->
     <div style="max-width:1200px;margin:0 auto;padding:2rem 1rem">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
-            <h1 style="font-size:28px;font-weight:700;color:#1e293b;margin:0">Nuestro Menu</h1>
+            <h1 style="font-size:28px;font-weight:700;color:#1e293b;margin:0">Prueba Nuestro Menu</h1>
             <div style="font-size:13px;color:#64748b">{{ filteredProducts.length }} productos disponibles</div>
         </div>
 

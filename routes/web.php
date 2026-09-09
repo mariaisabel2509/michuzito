@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\TwoFactorController;
@@ -9,6 +9,7 @@ use App\Http\Controllers\PaymentController;
 use App\Http\Controllers\MenuController;
 use App\Http\Controllers\WhatsAppAuthController;
 use App\Http\Controllers\OrderController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\InventoryController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -77,9 +78,17 @@ Route::get('/pagos/{order}/paypal/cancel',  [PayPalController::class, 'cancel'])
         Route::post('/admin/inventory/{product}', [InventoryController::class, 'update'])->name('admin.inventory.update');
         Route::post('/admin/inventory',                   [InventoryController::class, 'store'])->name('admin.inventory.store');
         Route::delete('/admin/inventory/{product}',       [InventoryController::class, 'destroy'])->name('admin.inventory.destroy');
+        Route::get('/reports',            [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/ventas',     [ReportController::class, 'ventas'])->name('reports.ventas');
+        Route::get('/reports/inventario', [ReportController::class, 'inventario'])->name('reports.inventario');
+        Route::get('/reports/pedidos',    [ReportController::class, 'pedidos'])->name('reports.pedidos');
+        Route::get('/reports/tiempos',    [ReportController::class, 'tiempos'])->name('reports.tiempos');
         Route::get('/admin/supplies', [SupplyController::class,'index'])->name('admin.supplies');
         Route::post('/admin/supplies', [SupplyController::class,'store'])->name('admin.supplies.store');
         Route::post('/admin/supplies/{supply}', [SupplyController::class,'update'])->name('admin.supplies.update');
         Route::delete('/admin/supplies/{supply}', [SupplyController::class,'destroy'])->name('admin.supplies.destroy');
     });
 });
+
+
+
