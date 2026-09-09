@@ -1,4 +1,19 @@
-<script setup>
+﻿<script setup>
+/**
+ * Orders/AdminOrders.vue — Panel de administración de pedidos.
+ *
+ * Alimentado por OrderController::adminIndex(), que pagina (50 por
+ * página, prop `orders` es un paginador de Laravel, por eso se accede
+ * como orders.data) y envía también `repartidores` para poblar el
+ * selector de reasignación manual.
+ *
+ * La pestaña "Activos" vs "Historial" es puramente de presentación
+ * (se filtra en el propio componente sobre los datos ya traídos, no
+ * hay una petición nueva al cambiar de pestaña). Un pedido sin
+ * repartidor asignado muestra el selector + botón "Asignar", que llama
+ * a OrderController::assignRepartidor (reasignación manual, distinta
+ * de la asignación automática que ocurre en OrderController::store).
+ */
 import { useForm, router } from '@inertiajs/vue3'
 import { ref } from 'vue'
 
@@ -22,6 +37,9 @@ const assign = (orderId) => {
 }
 
 const selectedTab = ref('activos')
+// "Activos" = todo lo que aun no llego a un estado final; el resto
+// (entregado/cancelado) pasa a "Historial". Se calcula una sola vez
+// sobre orders.data porque la paginacion ya viene resuelta del backend.
 const activos     = orders.data?.filter(o => o.status !== 'entregado' && o.status !== 'cancelado') ?? []
 const completados = orders.data?.filter(o => o.status === 'entregado' || o.status === 'cancelado') ?? []
 </script>

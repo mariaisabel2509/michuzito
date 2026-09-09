@@ -19,6 +19,8 @@ Route::get('/pagos/{order}/paypal', [PayPalController::class, 'checkout'])->name
 Route::get('/pagos/{order}/paypal/success', [PayPalController::class, 'success'])->name('paypal.success');
 Route::get('/pagos/{order}/paypal/cancel', [PayPalController::class, 'cancel'])->name('paypal.cancel');
 
+// ===== Menu (publico) =====
+// Home muestra el catalogo de productos disponibles (ver MenuController::index).
 Route::get('/', [MenuController::class, 'index'])->name('home');
 Route::middleware('guest')->group(function () {
     Route::get('/login',     [AuthController::class, 'showLogin'])->name('login');
@@ -57,14 +59,19 @@ Route::get('/pagos/{order}/paypal/success', [PayPalController::class, 'success']
 Route::get('/pagos/{order}/paypal/cancel',  [PayPalController::class, 'cancel'])->name('paypal.cancel');
     Route::get('/payments/invoice/{invoice}',  [PaymentController::class, 'invoice'])->name('payments.invoice');
     Route::get('/payments/pending/{payment}',  [PaymentController::class, 'pending'])->name('payments.pending');
+
+    // ===== Entregas (Orders) =====
+    // Rutas de cliente: historial, creacion y detalle de pedidos.
     Route::get('/orders',                  [OrderController::class, 'index'])->name('orders.index');
     Route::post('/orders',                 [OrderController::class, 'store'])->name('orders.store');
     Route::post('/orders/{order}/ready', [OrderController::class, 'markReady'])->name('orders.markReady');
     Route::get('/orders/{order}',          [OrderController::class, 'show'])->name('orders.show');
     Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status');
+    // Vistas por rol: repartidor ve sus entregas, vendedor ve pedidos libres + propios.
     Route::get('/mis-entregas',            [OrderController::class, 'repartidorOrders'])->name('orders.repartidor');
     Route::get('/mis-pedidos-vendedor',    [OrderController::class, 'vendedorOrders'])->name('orders.vendedor');
     Route::post('/orders/{order}/claim',   [OrderController::class, 'claimOrder'])->name('orders.claim');
+
     Route::middleware('role:administrador')->group(function () {
         Route::get('/admin/users',                        [UserController::class, 'index'])->name('admin.users');
         Route::post('/admin/users',                       [UserController::class, 'store']);
@@ -72,23 +79,27 @@ Route::get('/pagos/{order}/paypal/cancel',  [PayPalController::class, 'cancel'])
         Route::patch('/admin/users/{user}/deactivate',    [UserController::class, 'deactivate']);
         Route::get('/admin/payments',                     [PaymentController::class, 'index'])->name('admin.payments');
         Route::patch('/admin/payments/{payment}/approve', [PaymentController::class, 'approve'])->name('payments.approve');
+
+        // ===== Entregas (Orders) - panel admin =====
         Route::get('/admin/orders',                       [OrderController::class, 'adminIndex'])->name('admin.orders');
         Route::patch('/admin/orders/{order}/assign',      [OrderController::class, 'assignRepartidor'])->name('admin.orders.assign');
+
         Route::get('/admin/inventory',                    [InventoryController::class, 'index'])->name('admin.inventory');
         Route::post('/admin/inventory/{product}', [InventoryController::class, 'update'])->name('admin.inventory.update');
         Route::post('/admin/inventory',                   [InventoryController::class, 'store'])->name('admin.inventory.store');
         Route::delete('/admin/inventory/{product}',       [InventoryController::class, 'destroy'])->name('admin.inventory.destroy');
+
+        // ===== Reportes =====
+        // Todas exigen rol administrador (heredado de este grupo de middleware).
         Route::get('/reports',            [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/ventas',     [ReportController::class, 'ventas'])->name('reports.ventas');
         Route::get('/reports/inventario', [ReportController::class, 'inventario'])->name('reports.inventario');
         Route::get('/reports/pedidos',    [ReportController::class, 'pedidos'])->name('reports.pedidos');
         Route::get('/reports/tiempos',    [ReportController::class, 'tiempos'])->name('reports.tiempos');
+
         Route::get('/admin/supplies', [SupplyController::class,'index'])->name('admin.supplies');
         Route::post('/admin/supplies', [SupplyController::class,'store'])->name('admin.supplies.store');
         Route::post('/admin/supplies/{supply}', [SupplyController::class,'update'])->name('admin.supplies.update');
         Route::delete('/admin/supplies/{supply}', [SupplyController::class,'destroy'])->name('admin.supplies.destroy');
     });
 });
-
-
-

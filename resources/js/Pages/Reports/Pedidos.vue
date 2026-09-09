@@ -1,4 +1,13 @@
 ﻿<script setup>
+/**
+ * Reports/Pedidos.vue — Reporte de Pedidos.
+ *
+ * Recibe de ReportController::pedidos() el total del rango, el
+ * desglose por estado (porEstado) y el detalle fila por fila. A
+ * diferencia de Ventas, aquí SÍ se cuentan pedidos en cualquier
+ * estado (no solo entregado), porque el objetivo es visibilidad
+ * operativa completa del periodo.
+ */
 import { router } from '@inertiajs/vue3'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
@@ -12,6 +21,7 @@ const props = defineProps({
     hasta: String,
 })
 
+// Mapeos locales, deben mantenerse en sincronia con Order::STATUSES.
 const estadoLabel = (status) => {
     const labels = { en_proceso: 'En proceso', en_camino: 'En camino', entregado: 'Entregado', cancelado: 'Cancelado' }
     return labels[status] || status

@@ -1,4 +1,14 @@
 ﻿<script setup>
+/**
+ * Reports/Tiempos.vue — Reporte de Tiempos de Entrega.
+ *
+ * ReportController::tiempos() ya filtra solo pedidos con picked_up_at
+ * y delivered_at llenos, y calcula los minutos por pedido y el
+ * promedio del periodo; este componente solo muestra esos valores.
+ * El filtro de fechas aquí se aplica sobre delivered_at (no sobre la
+ * fecha de creacion del pedido), asi que un pedido creado fuera del
+ * rango puede aparecer si fue entregado dentro de el.
+ */
 import { router } from '@inertiajs/vue3'
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'

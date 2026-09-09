@@ -1,4 +1,19 @@
 ﻿<script setup>
+/**
+ * Orders/VendedorOrders.vue — Gestion de pedidos (vista del vendedor).
+ *
+ * Alimentado por OrderController::vendedorOrders(), que combina dos
+ * grupos en una sola lista: los pedidos que este vendedor ya tomó
+ * (vendedor_id = él) y los pedidos "libres" sin vendedor asignado
+ * (marcados aquí como "Disponible"). Las tres acciones posibles se
+ * conectan cada una con un endpoint distinto de OrderController:
+ *   - claimOrder  -> POST /orders/{id}/claim   (reclamar un pedido libre)
+ *   - markReady   -> POST /orders/{id}/ready   (avisar al repartidor)
+ *   - updateStatus -> PATCH /orders/{id}/status (aquí solo para cancelar)
+ * Un pedido ya tomado por el vendedor no puede volver a "Tomar pedido";
+ * el bloque v-else-if solo muestra las acciones que correspondan según
+ * status y ready_at, igual que en RepartidorOrders.vue.
+ */
 import { useForm, router } from '@inertiajs/vue3'
 
 const { orders } = defineProps(['orders'])
@@ -13,6 +28,8 @@ const statusColors = {
 const formatPrice = (p) => '$' + Number(p).toLocaleString('es-CO')
 const formatDate  = (d) => new Date(d).toLocaleDateString('es-CO', { day:'2-digit', month:'short', year:'numeric' })
 
+// El backend re-valida que el pedido siga libre (status=en_proceso y
+// sin vendedor_id) antes de asignarlo; esto es solo el disparador.
 const claimOrder = (orderId) => {
     useForm({}).post(`/orders/${orderId}/claim`)
 }
@@ -21,6 +38,8 @@ const updateStatus = (orderId, status) => {
     useForm({ status }).patch(`/orders/${orderId}/status`)
 }
 
+// Avisa al repartidor (OrderReadyNotification) que el pedido ya está
+// físicamente preparado y puede recogerse.
 const markReady = (orderId) => {
     useForm({}).post(`/orders/${orderId}/ready`)
 }

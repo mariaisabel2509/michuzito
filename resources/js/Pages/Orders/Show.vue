@@ -1,4 +1,14 @@
-<script setup>
+﻿<script setup>
+/**
+ * Orders/Show.vue — Detalle de un pedido puntual.
+ *
+ * Alimentado por OrderController::show(), que ya valida en el backend
+ * que solo el cliente dueño, el repartidor/vendedor asignado o un
+ * administrador puedan llegar a esta vista (403 en cualquier otro caso).
+ * La sección "Seguimiento" es de solo lectura: se apaga/enciende según
+ * los timestamps del pedido (created_at, picked_up_at, delivered_at),
+ * sin ninguna acción que el cliente pueda ejecutar desde aquí.
+ */
 import { router } from '@inertiajs/vue3'
 
 const { order } = defineProps(['order'])
