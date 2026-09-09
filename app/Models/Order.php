@@ -108,6 +108,17 @@ class Order extends Model
     }
 
     /**
+     * RELACIÓN:        Order tiene un Payment (hasOne, 1 pedido → 1 pago)
+     * USADA DESDE:     PaymentController (próximo paso) y las vistas Vue de
+     *                  pedidos, para saber si un pedido ya fue pagado o no
+     * PERMITE:         $order->payment  →  accede al pago asociado (o null si aún no paga)
+     */
+    public function payment()
+    {
+        return $this->hasOne(Payment::class);
+    }
+
+    /**
      * Verifica si un pedido puede cambiar
      * de un estado a otro.
      *

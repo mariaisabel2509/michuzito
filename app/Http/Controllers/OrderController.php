@@ -20,7 +20,7 @@ class OrderController extends Controller
             'items.*.qty'    => 'required|integer|min:1',
             'items.*.note'   => 'nullable|string|max:300',
             'address'        => 'required|string|max:255|min:10',
-            'payment_method' => 'required|in:efectivo,transferencia',
+            'payment_method' => 'required|in:efectivo,paypal',
             'notes'          => 'nullable|string|max:500',
         ], [
             'address.required' => 'La direccion de entrega es obligatoria.',
@@ -56,7 +56,6 @@ class OrderController extends Controller
         $tax   = round($subtotal * 0.19, 2);
         $total = $subtotal + $tax;
 
-        // Como solo existe un repartidor en el sistema, se asigna automaticamente
         $repartidor = User::role('repartidor')->where('is_active', true)->first();
 
         $order = Order::create([
@@ -80,7 +79,6 @@ class OrderController extends Controller
 
         activity()->causedBy($user)->performedOn($order)->log('order_created');
 
-        // Notificar al unico repartidor del nuevo pedido
         if ($repartidor && $repartidor->email) {
             try {
                 $repartidor->notify(new OrderStatusNotification($order));
@@ -211,34 +209,35 @@ class OrderController extends Controller
     }
 
     public function markReady(Request $request, Order $order)
-{
-    $user = auth()->user();
+    {
+        $user = auth()->user();
 
-    abort_unless(
-        $user->hasRole('administrador') || $order->vendedor_id === $user->id,
-        403
-    );
+        abort_unless(
+            $user->hasRole('administrador') || $order->vendedor_id === $user->id,
+            403
+        );
 
-    if ($order->status !== 'en_proceso') {
-        return back()->withErrors(['order' => 'Solo se puede marcar como listo un pedido en proceso.']);
+        if ($order->status !== 'en_proceso') {
+            return back()->withErrors(['order' => 'Solo se puede marcar como listo un pedido en proceso.']);
+        }
+
+        if ($order->ready_at) {
+            return back()->withErrors(['order' => 'Este pedido ya fue marcado como listo.']);
+        }
+
+        $order->update(['ready_at' => now()]);
+
+        activity()->causedBy($user)->performedOn($order)->log('order_marked_ready');
+
+        if ($order->repartidor && $order->repartidor->email) {
+            try {
+                $order->repartidor->notify(new \App\Notifications\OrderReadyNotification($order));
+            } catch (\Exception $e) {}
+        }
+
+        return back()->with('success', 'Pedido marcado como listo. Se notifico al repartidor.');
     }
 
-    if ($order->ready_at) {
-        return back()->withErrors(['order' => 'Este pedido ya fue marcado como listo.']);
-    }
-
-    $order->update(['ready_at' => now()]);
-
-    activity()->causedBy($user)->performedOn($order)->log('order_marked_ready');
-
-    if ($order->repartidor && $order->repartidor->email) {
-        try {
-            $order->repartidor->notify(new \App\Notifications\OrderReadyNotification($order));
-        } catch (\Exception $e) {}
-    }
-
-    return back()->with('success', 'Pedido marcado como listo. Se notificó al repartidor.');
-}
     public function adminIndex()
     {
         $orders = Order::with(['cliente', 'repartidor', 'vendedor'])

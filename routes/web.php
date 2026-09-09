@@ -13,6 +13,10 @@ use App\Http\Controllers\InventoryController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 use App\Http\Controllers\SupplyController;
+use App\Http\Controllers\PayPalController;
+Route::get('/pagos/{order}/paypal', [PayPalController::class, 'checkout'])->name('paypal.checkout');
+Route::get('/pagos/{order}/paypal/success', [PayPalController::class, 'success'])->name('paypal.success');
+Route::get('/pagos/{order}/paypal/cancel', [PayPalController::class, 'cancel'])->name('paypal.cancel');
 
 Route::get('/', [MenuController::class, 'index'])->name('home');
 Route::middleware('guest')->group(function () {
@@ -44,8 +48,12 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/perfil',            [ProfileController::class, 'update'])->name('profile.update');
     Route::put('/perfil/contrasena', [ProfileController::class, 'changePassword'])->name('profile.password');
         Route::patch('/perfil/disponibilidad', [ProfileController::class, 'toggleAvailability'])->name('profile.toggle.availability');
-    Route::get('/pagos',                       [PaymentController::class, 'show'])->name('payments.show');
-    Route::post('/pagos',                      [PaymentController::class, 'store'])->name('payments.store');
+   // Ahora exigen un pedido específico en la URL: /pagos/5, /pagos/12, etc.
+Route::get('/pagos/{order}',  [PaymentController::class, 'show'])->name('payments.show');
+Route::post('/pagos/{order}', [PaymentController::class, 'store'])->name('payments.store');
+Route::get('/pagos/{order}/paypal',         [PayPalController::class, 'checkout'])->name('paypal.checkout');
+Route::get('/pagos/{order}/paypal/success', [PayPalController::class, 'success'])->name('paypal.success');
+Route::get('/pagos/{order}/paypal/cancel',  [PayPalController::class, 'cancel'])->name('paypal.cancel');
     Route::get('/payments/invoice/{invoice}',  [PaymentController::class, 'invoice'])->name('payments.invoice');
     Route::get('/payments/pending/{payment}',  [PaymentController::class, 'pending'])->name('payments.pending');
     Route::get('/orders',                  [OrderController::class, 'index'])->name('orders.index');
