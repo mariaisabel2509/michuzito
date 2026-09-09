@@ -87,8 +87,13 @@ class PayPalController extends Controller
 
         $token = $this->accessToken();
 
+        // CAMBIO: PayPal exige un objeto JSON vacio "{}" en el cuerpo de
+        // esta peticion. Sin un segundo argumento explicito, Laravel
+        // enviaba un array vacio "[]", que PayPal rechazaba con
+        // INVALID_REQUEST por no cumplir su schema. (object) [] fuerza
+        // la serializacion correcta a "{}".
         $capture = Http::withToken($token)
-            ->post($this->baseUrl() . "/v2/checkout/orders/{$paypalOrderId}/capture");
+            ->post($this->baseUrl() . "/v2/checkout/orders/{$paypalOrderId}/capture", (object) []);
 
         $capture->throw();
         $result = $capture->json();
